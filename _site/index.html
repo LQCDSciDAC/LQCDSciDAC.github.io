@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>LQCD SciDAC-4 Project</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="description" content="Public webpage of the LQCD SciDAC-4 Project" />
+  <meta name="keywords" content="USQCD, Lattice, LQCD, Extreme, Matter, Hadron, Nuclei" />
+  <meta name="author" content="LQCD SciDAC-4 Project" />
+  <link rel="stylesheet" type="text/css" href="style.css" />
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    TeX: {
+      equationNumbers: {
+        autoNumber: "AMS"
+      }
+    },
+    tex2jax: {
+      inlineMath: [ ['$','$'] ],
+      displayMath: [ ['$$','$$'] ],
+      processEscapes: true,
+    }
+  });
+</script>
+
+<script type="text/javascript"
+
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+<!-- src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"> -->
+
+
+</head>
+
+<body>
+  <div class="wrap"> <!-- fixes width -->
+    <div class="backgr"> <!--white center -->
+
+
+      <div class="top">
+        <img src="./img/scidac.png" alt="pic" height="118" width="336"></img>
+        <h1 class="red">LQCD SciDAC-4 Project</h1>
+      </div>
+
+ <!--     <br/> -->
+
+      <div class="navigation">
+        
+<table class="navigation"><tr class="navigation">
+  
+  <td class="navigation-selected">
+    <a href="index.html">Home</a>
+  </td>
+
+  <td class="navigation">
+    <a href="about.html">About</a>
+  </td>
+
+  <td class="navigation">
+    <a href="scidac.html">SciDAC</a>
+  </td>
+
+  <td class="navigation">
+    <a href="results.html">Highlights</a>
+  </td>
+
+  <td class="navigation">
+    <a href="people.html">People</a>
+  </td>
+
+  <td class="navigation">
+    <a href="publications.html">Publications</a>
+  </td>
+  
+</tr></table>
+
+      </div>
+
+
+      <br/>
+      <div class="main">
+
+        <table cellpadding="5px">
+          <tr>
+
+            <td class="main">
+
+
+<a id="main"></a><h1>LQCD SciDAC-4 Project</h1>
+<div>
+
+  <p> The Lattice Quantum Chromo-Dynamics (LQCD) SciDAC-4 Project is
+  supported by the U.S. Dept. of Energy Office of Nuclear Physics and
+  the Office of Advanced Scientific Computing Research. The project is
+  supporting the development of the software infrastructure to carry
+  out scientific calculations to address fundamental questions in
+  nuclear science. It is a collaboration of domain scientists, and
+  computer scientists which aims to understand the structure of
+  nuclear matter under extreme conditions, and how quarks and gluons
+  are confined to build the matter that is observed in nature.  </p>
+  
+</div>
+
+
+
+
+<br/>
+<a id="news"></a><h1>News</h1>
+<br/>
+<div>
+
+<!-- add new news items to the top, kill off older items at the bottom -->
+<!-- as new ones are added -->
+
+<!-- include links to postdoc job adverts -->
+<!-- INT workshop would be good to go here -->
+
+  
+  
+
+  <table class="highlights">
+
+  <!-- ******* news item  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/PRLcoverDetmold.jpg" alt="pic" width="250" class="results"></img>
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.nersc.gov/news-publications/nersc-news/science-news/2019/nerscs-cori-system-reveals-integral-role-of-gluons-in-proton-pressure-distribution/" style="text-decoration:none">
+          NERSC's Cori System Reveals Integral Role of Gluons in Proton Pressure Distribution
+        </a>
+      </h3>
+
+      <p>
+      <i>NERSC Highlight, 2019-07-08</i>
+      <br/><br/>
+      For the first time, lattice QCD calculations run at NERSC
+      allowed nuclear physicists to determine the pressure
+      distribution inside a proton, taking into account the
+      contributions of the proton’s fundamental particles: quarks and
+      gluons. This discovery brings nuclear scientists closer to a
+      complete understanding of a proton’s structure and the
+      fundamental particles that make up most of the visible matter in
+      the universe.
+      </p>
+    </td>
+  </tr>
+
+    
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/64_mg.png" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="./MGProtoHighlight.pdf">
+          MG Proto: Multigrid LQCD Propagators for Multicore x86 systems
+        </a>
+      </h3>
+
+      <p>
+      <i>SciDAC-4 Highlight, 2019-05-16</i>
+      <br/><br/>
+      A new multi-grid implementation for x86 architectures with supporting AVX512 instructions, such as 
+      Intel Xeon Phi Knight's Landing, and Xeon Servers (Skylake and beyond) speeds up calculations by 7x-8x
+      accelerating calculations on platforms such as NERSC Cori KNL, ALCF Theta, TACC Stampede 2 and the 
+      Jefferson Lab SciPhi Cluster. 
+      </p>
+    </td>
+  </tr>
+
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/summit.png" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.olcf.ornl.gov/2018/09/17/summit-speeds-calculations-in-the-search-for-exotic-particles" style="text-decoration:none">
+          Summit speeds calculations in the search for exotic particles
+        </a>
+      </h3>
+
+      <p>
+      <i>OLCF Highlight, 2018-09-17</i>
+      <br/><br/>
+The accelerated architecture of America’s fastest supercomputer boosts QCD simulations
+      </p>
+    </td>
+  </tr>
+
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/gauge_gen.png" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="./SciDACHMCHighlight.pdf" style="text-decoration:none">
+          Accelerating QCD Gauge Generation on GPUs
+        </a>
+      </h3>
+
+      <p>
+      <i>SciDAC-4 Highlight, 2018-05-01</i>
+      <br/><br/>
+The generation of gauge configurations (samples of the strong force
+      field in the vacuum) is the gating first step of nuclear and
+      high energy physics calculations using lattice quantum
+      chromodynamics (LQCD) generating the data on which subsequent
+      calculations depend. 
+Here, we demonstrate a 73x reduction in the GPU-hours required for the generation of such gauge fields
+       moving from Titan to Summit, and incorporating new algorithms
+      well suited to the new system. The improvement on  Summit enables calculations which where hitherto considered out-of reach for reasons of computational cost, and will fundamentally re-shape how we will conduct our scientific campaigns in the future.
+      </p>
+    </td>
+  </tr>
+
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/scidac.png" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.jlab.org/news/releases/exploring-exotic-world-quarks-and-gluons-dawn-exascale" style="text-decoration:none">
+          Exploring the Exotic World of Quarks and Gluons at the Dawn of the Exascale
+        </a>
+      </h3>
+
+      <p>
+      <i>Jefferson Lab Highlights, 2017-10-11</i>
+      <br/><br/>
+Jefferson Lab leads development of next-generation software to benefit
+      nuclear physics computation. An award was recently announced by DOE’s Office of Nuclear Physics and the Office of Advanced Scientific Computing Research in the Office of Science. It will provide $8.25 million for the “Computing the Properties of Matter with Leadership Computing Resources” research project.
+      </p>
+    </td>
+  </tr>
+
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/rhic_graphics-fig1-355px.jpg" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.bnl.gov/newsroom/news.php?a=212556&btw=1" style="text-decoration:none">
+          Using Supercomputers to Delve Ever Deeper into the Building Blocks of Matter
+        </a>
+      </h3>
+
+      <p>
+      <i>Brookhaven National Lab Features, 2017-10-18</i>
+      <br/><br/>
+      Scientists to develop next-generation computational tools for studying interactions of quarks and gluons in hot, dense nuclear matter
+      </p>
+    </td>
+  </tr>
+
+
+
+  <!-- OLD NEWS
+
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="img/tetraquarks.png" alt="pic" width="200" class="results"></img>
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://arxiv.org/abs/1709.01417" style="text-decoration:none">
+          Tetraquark operators explored in the charm sector
+        </a>
+      </h3>
+
+      <p>
+      <i>arXiv preprint 1709.01417</i>
+      <br/><br/>
+
+      A new preprint reports on work lead by DAMTP student Gavin
+      Cheung into the importance of including local <i>"tetraquark"</i>
+      operators into a basis of meson-meson operators in the doubly
+      charmed $I=0$ and hidden charm $I=1$
+      sectors. The paper shows that the addition of tetraquark
+      operators does not substantively change the spectrum of states,
+      which is found to show no sign of featuring clear narrow
+      resonances or bound-states. 
+      </p>
+    </td>
+  </tr>
+
+
+-->
+
+
+  
+  </table>
+
+  
+</div>
+
+
+
+              </td>
+
+            </tr>
+
+          </table>
+
+        </div> <!--class=main-->
+      </div> <!--class=backgr-->
+    </div> <!--class="wrap"-->
+  </body>
+</html>
+

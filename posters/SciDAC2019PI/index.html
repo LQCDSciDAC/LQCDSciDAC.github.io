@@ -1,0 +1,109 @@
+<a id="main"></a><h1>SciDAC 2019 PI-Meeting Posters</h1>
+<div>
+
+  <p>Please find posters and their corresponding citations and
+  references below</p>
+  
+</div>
+
+
+<div>
+<table>
+<tr>
+  <table>
+  <tr>
+     <td></td><td><a id="gauge_gen"></a><h3>Accelerating Gauge Generation for Lattice QCD on Summit</h3></td>
+  </tr>
+  <tr>
+     <td>Authors:</td> <td> Kate Clark (NVIDIA Corporation), B&aacute;lint Jo&oacute; (Jefferson Lab), Wei Sun (Jefferson Lab),
+Mathias Wagner (NVIDIA Corporation), Frank Winter (Jefferson Lab), Evan Weinberg (NVIDIA Corporation)</td
+  </tr>
+
+  <tr>
+   <td>Poster Files:</td><td> <a href="./SciDAC19GaugeGenPoster.key">Keynote</a> <a href="./SciDAC19GaugeGenPoster.pdf">PDF</a></td>
+  </tr>
+
+  <tr>
+   <td> Contact: </td> <td> B&aacute;lint Jo&oacute; email: <it> bjoo at jlab.org</it> </td>
+  </tr>
+
+  <tr><td><b>Abstract:</b></td></tr>
+  <tr><td></td><td><p>
+    Following the successful incorporation of the QUDA Adaptive Multi-Grid solver into Chroma, which yielded
+    an 82x integrated speedup on Summit since this work began, we discuss continuing algorithmic and development 
+    work in currently in progress to stabilize and speed up our gauge generation calculations</td>
+  </tr>
+  </table>
+  <table>
+  <tr>
+   <td><b>References</b></td>
+  </tr>
+  <tr>
+      <td>
+      <p>
+      <dl>
+         <dt>[1]</dt> <dd><a href="https://dl.acm.org/citation.cfm?id=3014995">Accelerating Lattice QCD multigrid on GPUs using fine-grained parallelization</a>, <i>M. A. Clark, B. Jo&oacute; A. Strelchenko, M. Cheng, A. Gambhir, R. C. Brower</i> SC'16 Proceedings of the International Conference on High Performance Computing Networking Storage and Analysis </dd>
+	 <dt>[2]</dt> <dd><a href="https://arxiv.org/abs/hep-lat/9608145">Approximate Actions for Lattice QCD Simulation</a> <i>Alan C. Irving (Liverpool University), James C. Sexton (Trinity College Dublin, now I.B.M.)</i>, Phys.Rev.D55:5456-5473,1997 </dd>
+	 <dt>[3]</dt> <dd><a href="https://arxiv.org/abs/1610.02370">Adaptive Aggregation-based Domain Decomposition Multigrid for Twisted Mass Fermions</a>, <i>Constantia Alexandrou, Simone Bacchio, Jacob Finker, Andreas Frommer, Karsten Kahl, Matthias Rottmann</i>, Phys. Rev. D 94, 114509 (2016) </dd>
+	 <dt>[4]</dt> <dd><a href="https://arxiv.org/abs/0810.0946">Fluctuations and reweighting of the quark determinant on large lattices</a>, <i>Martin L&uuml;scher, Filippo Palombi</i>, PoS LATTICE2008:049,2008</dd>
+         <dt>[5]</dt> <dd><a href="https://arxiv.org/abs/1111.3815">Twisted-mass reweighting for O(a) improved Wilson fermions</a>, <i>Chuan Miao, Harvey B. Meyer, Hartmut Wittig</i>, PoS(Lattice 2011)041</dd>
+	 <dt>Software</dt><dd><a href="https://jeffersonlab.github.io/chroma">Chroma</a>,
+	 <a href="https://lattice.github.io/quda">QUDA</a>, <a href="https://github.com/jeffersonlab/qdp-jit.git">QDP-JIT/LLVM</a>,
+	 <a href="https://usqcd-software.github.io">USQCD Software</a></dd>
+      </dl>
+     </p>
+     </td>
+   </tr>
+ </table>
+ </tr>
+<tr>
+  <table>
+  <tr>
+     <td></td><td><a id="gauge_gen"></a><h3>MG Proto: A Multigrid Solver for x86 multicore Systems</h3></td>
+  </tr>
+  <tr>
+     <td>Authors:</td> <td> B&aacute;lint Jo&oacute; (Jefferson Lab), Thorsten Kurth (NERSC)</td>
+  </tr>
+
+  <tr>
+   <td>Poster Files:</td><td> <a href="./SciDAC19MGPoster.key">Keynote</a> <a href="./SciDAC19MGPoster.pdf">PDF</a></td>
+  </tr>
+
+  <tr>
+   <td> Contact: </td> <td> B&aacute;lint Jo&oacute; email: <it> bjoo at jlab.org</it> </td>
+  </tr>
+
+  <tr><td><b>Abstract:</b></td></tr>
+  <tr><td></td><td><p>
+	We present the status of MG Proto, a prototype (but production capable) multi-grid solver for Wilson
+Clover fermions, designed to run on Intel Xeon Phi, Knights Landing and general x86 multi-core systems. We discuss
+details of threading, vectorization and present performance on the Stampede 2 Skylake System.
+  </tr>
+  </table>
+  <table>
+  <tr>
+   <td><b>References</b></td>
+  </tr>
+  <tr>
+      <td>
+      <p>
+      <dl>
+         <dt>[1]</dt> <dd><a href="https://arxiv.org/abs/0707.4018">Adaptive Multigrid Algorithm for Lattice QCD</a>, <i>J. Brannick, R. C. Brower, M. A. Clark, J. C. Osborn, C. Rebbi</i>, Phys.Rev.Lett.100:041601,2008</dd>
+	 <dt>[2]</dt> <dd><a href="https://arxiv.org/abs/1303.1377">Adaptive Aggregation Based Domain Decomposition Multigrid for the Lattice Wilson Dirac Operator</a> <i>Andreas Frommer, Karsten Kahl, Stefan Krieg, Bj&oacute;rn Leter, Matthias Rottmann</i>,arXiv:1303.1377 [hep-lat]</dd>
+	 <dt>[3]</dt> <dd><a href="https://arxiv.org/abs/1011.2775">Multigrid Solver for Clover Fermions</a>, <i>J. C. Osborn, R. Babich, J. Brannick, R. C. Brower, M. A. Clark, S. D. Cohen, C. Rebbi</i>, PoS Lattice2010:037,2010 </dd>
+	 <dt>[4]</dt> <dd><a href="https://www.springer.com/gp/book/9783030024642#">Lessons Learned from Optimizing Kernels for Adaptive Aggregation Multi-grid Solvers in Lattice QCD</a>, <i>B&aacute;lint Jo&oacute; and Thorsten Kurth</i>, High Performance Computing, ISC High Performance 2018 International Workshops, Frankfurt/Main, Germany June 28, 2018, Revised Selected Papers, R. Yokota, M. Weiland, J. Shalf, S. Alam editors, Lecture Notes in Computer Science, vol. 11203, 2018, Springer International Publishing</dd>
+         <dt>Software</dt><dd>
+         <a href="https://github.com/jeffersonlab/mg_proto">MG-Proto</a>,
+         <a href="https://jeffersonlab.github.io/chroma">Chroma</a>,
+	 <a href="https://github.com/jeffersonlab/qphix">QPhiX</a>,
+         <a href="https://usqcd-software.github.io">USQCD Software</a></dd>
+      </dl>
+      </dl>
+     </p>
+     </td>
+   </tr>
+ </table>
+ </tr>
+</table>
+   
+</div>
