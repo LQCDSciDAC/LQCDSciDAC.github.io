@@ -304,6 +304,87 @@ Here, we demonstrate a 73x reduction in the GPU-hours required for the generatio
 
 
 
+
+  <!-- OLD NEWS
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/scidac.png" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.jlab.org/news/releases/exploring-exotic-world-quarks-and-gluons-dawn-exascale" style="text-decoration:none">
+          Exploring the Exotic World of Quarks and Gluons at the Dawn of the Exascale
+        </a>
+      </h3>
+
+      <p>
+      <i>Jefferson Lab Highlights, 2017-10-11</i>
+      <br/><br/>
+Jefferson Lab leads development of next-generation software to benefit
+      nuclear physics computation. An award was recently announced by DOE’s Office of Nuclear Physics and the Office of Advanced Scientific Computing Research in the Office of Science. It will provide $8.25 million for the “Computing the Properties of Matter with Leadership Computing Resources” research project.
+      </p>
+    </td>
+  </tr>
+
+
+  <!-- ******* row  ******* -->
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="./img/rhic_graphics-fig1-355px.jpg" alt="pic" width="300" class="results"></img>
+
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://www.bnl.gov/newsroom/news.php?a=212556&btw=1" style="text-decoration:none">
+          Using Supercomputers to Delve Ever Deeper into the Building Blocks of Matter
+        </a>
+      </h3>
+
+      <p>
+      <i>Brookhaven National Lab Features, 2017-10-18</i>
+      <br/><br/>
+      Scientists to develop next-generation computational tools for studying interactions of quarks and gluons in hot, dense nuclear matter
+      </p>
+    </td>
+  </tr>
+
+  <tr class="highlights">
+    <td class="highlights">
+      <img src="img/tetraquarks.png" alt="pic" width="200" class="results"></img>
+    </td>
+    <td class="highlights">
+
+      <h3>
+        <a href="https://arxiv.org/abs/1709.01417" style="text-decoration:none">
+          Tetraquark operators explored in the charm sector
+        </a>
+      </h3>
+
+      <p>
+      <i>arXiv preprint 1709.01417</i>
+      <br/><br/>
+
+      A new preprint reports on work lead by DAMTP student Gavin
+      Cheung into the importance of including local <i>"tetraquark"</i>
+      operators into a basis of meson-meson operators in the doubly
+      charmed $I=0$ and hidden charm $I=1$
+      sectors. The paper shows that the addition of tetraquark
+      operators does not substantively change the spectrum of states,
+      which is found to show no sign of featuring clear narrow
+      resonances or bound-states. 
+      </p>
+    </td>
+  </tr>
+
+
+-->
+
+
   
   </table>
 
