@@ -1,41 +1,36 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ASCR/NP LQCD SciDAC Project</title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <meta name="description" content="Public webpage of the ASCR/NP LQCD SciDAC Project" />
   <meta name="keywords" content="USQCD, Lattice, LQCD, Extreme, Matter, Hadron, Nuclei" />
   <meta name="author" content="ASCR/NP LQCD SciDAC Project" />
   <link rel="stylesheet" type="text/css" href="style.css" />
 
   {% include mathjax_support %}
-
 </head>
 
-<body>
-  <div class="wrap"> <!-- fixes width -->
-    <div class="backgr"> <!--white center -->
-
-
-      <div class="top">
-        <img src="./img/scidac.png" alt="pic" height="118" width="336"></img>
-        <h1 class="red">ASCR/NP LQCD SciDAC Project</h1>
+<body class="{% if page.url == '/' or page.url contains 'index.html' %}home-page{% endif %}">
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="brand-block">
+        <a class="brand-mark" href="index.html" aria-label="ASCR/NP LQCD SciDAC Project home">
+          <img src="./img/scidac.png" alt="ASCR/NP LQCD SciDAC Project" width="336" height="118" />
+        </a>
+        <div class="brand-copy">
+          <p class="eyebrow">Computational Nuclear Physics</p>
+          <h1 class="site-title">ASCR/NP LQCD SciDAC Project</h1>
+          <p class="site-subtitle">
+            Advancing lattice QCD algorithms, software, and science for leadership-class computing.
+          </p>
+        </div>
       </div>
-
- <!--     <br/> -->
 
       <div class="navigation">
         {% include navigation.html %}
       </div>
+    </header>
 
-
-      <br/>
-      <div class="main">
-
-        <table cellpadding="5px">
-          <tr>
-
-            <td class="main">
+    <main class="site-main">

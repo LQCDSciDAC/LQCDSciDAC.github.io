@@ -1,28 +1,8 @@
-
-<table class="navigation"><tr class="navigation">
-  
-  <td {% if page.url == "/" or page.url contains "index.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="index.html">Home</a>
-  </td>
-
-  <td {% if page.url contains "about.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="about.html">About</a>
-  </td>
-
-  <td {% if page.url contains "scidac.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="scidac.html">SciDAC</a>
-  </td>
-
-  <td {% if page.url contains "results.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="results.html">Highlights</a>
-  </td>
-
-  <td {% if page.url contains "people.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="people.html">People</a>
-  </td>
-
-  <td {% if page.url contains "publications.html" %}class="navigation-selected"{% else %}class="navigation"{% endif %}>
-    <a href="publications.html">Publications</a>
-  </td>
-  
-</tr></table>
+<nav class="site-nav" aria-label="Primary">
+  <a {% if page.url == "/" or page.url contains "index.html" %}class="is-current"{% endif %} href="index.html">Home</a>
+  <a {% if page.url contains "about.html" %}class="is-current"{% endif %} href="about.html">About</a>
+  <a {% if page.url contains "scidac.html" %}class="is-current"{% endif %} href="scidac.html">SciDAC</a>
+  <a {% if page.url contains "results.html" %}class="is-current"{% endif %} href="results.html">Highlights</a>
+  <a {% if page.url contains "people.html" %}class="is-current"{% endif %} href="people.html">People</a>
+  <a {% if page.url contains "publications.html" %}class="is-current"{% endif %} href="publications.html">Publications</a>
+</nav>
