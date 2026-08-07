@@ -34,7 +34,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-GENERATOR_VERSION = "2026-08-07.4"
+GENERATOR_VERSION = "2026-08-07.5"
+DEFAULT_SINCE_YEAR = 2002  # include publications from 2002 onward
 
 API_URL = "https://inspirehep.net/api/literature"
 INSPIRE_LITERATURE_URL = "https://inspirehep.net/literature/{}"
@@ -86,7 +87,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--since-year",
         type=int,
-        help="Keep only publications with journal publication year >= this value.",
+        default=DEFAULT_SINCE_YEAR,
+        help=(
+            "Keep only publications with journal publication year >= this value "
+            f"(default: {DEFAULT_SINCE_YEAR})."
+        ),
     )
     parser.add_argument(
         "--max-authors",
@@ -577,12 +582,11 @@ def main() -> int:
 
     unique = deduplicate(all_hits)
 
-    if args.since_year is not None:
-        unique = {
-            rid: hit
-            for rid, hit in unique.items()
-            if publication_year(hit.get("metadata", {})) >= args.since_year
-        }
+    unique = {
+        rid: hit
+        for rid, hit in unique.items()
+        if publication_year(hit.get("metadata", {})) >= args.since_year
+    }
 
     output = render_html(unique.values(), max_authors=args.max_authors)
     args.output.write_text(output, encoding="utf-8")
