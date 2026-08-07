@@ -481,7 +481,7 @@ def render_html(
             )
 
         rid = record_id(hit)
-        title = html.escape(title_for(metadata), quote=False)
+        title = title_for(metadata)
         authors = html.escape(format_authors(metadata, max_authors), quote=False)
         citation = html.escape(format_journal_citation(metadata), quote=False)
         url = INSPIRE_LITERATURE_URL.format(urllib.parse.quote(rid, safe=""))
