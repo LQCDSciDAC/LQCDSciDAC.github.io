@@ -34,6 +34,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
+GENERATOR_VERSION = "2026-08-07.4"
+
 API_URL = "https://inspirehep.net/api/literature"
 INSPIRE_LITERATURE_URL = "https://inspirehep.net/literature/{}"
 
@@ -312,36 +314,95 @@ def record_id(hit: dict[str, Any]) -> str:
     return str(rid)
 
 
+MATHML_TAGS = (
+    "math|mrow|mi|mo|mn|msub|msup|mover|munder|munderover|"
+    "mtext|mfrac|msqrt|mroot|mtable|mtr|mtd|mfenced|mspace|"
+    "semantics|annotation|annotation-xml"
+)
+
+_MATHML_ESCAPED_TAG_RE = re.compile(
+    rf"""\\(?=</?(?:{MATHML_TAGS})\b)""",
+    re.IGNORECASE,
+)
+
+
 def title_for(metadata: dict[str, Any]) -> str:
+    """
+    Return an INSPIRE title with MathML preserved as real HTML/MathML markup.
+
+    INSPIRE titles can arrive with MathML either directly:
+        <math>...</math>
+
+    or HTML-escaped:
+        &lt;math&gt;...&lt;/math&gt;
+
+    Some serialized forms may also contain a literal backslash immediately
+    before a MathML tag:
+        \\<math>...\\</math>
+
+    Normalize those cases so the generated page contains actual MathML tags.
+    """
     titles = metadata.get("titles") or []
     if not titles:
         return "(untitled)"
-    # Prefer the first title, which is INSPIRE's primary display title.
-    return str(titles[0].get("title") or "(untitled)")
 
+    title = str(titles[0].get("title") or "(untitled)")
+
+    # Decode HTML entities such as &lt;math&gt; and &amp;.
+    title = html.unescape(title)
+
+    # Remove only backslashes that immediately precede known MathML tags.
+    # This deliberately leaves ordinary LaTeX/backslashes elsewhere untouched.
+    title = _MATHML_ESCAPED_TAG_RE.sub("", title)
+
+    return title
 
 def initials(given: str) -> str:
+    """
+    Convert given names to compact initials without spelling ordinary
+    names letter-by-letter.
+
+    Examples:
+        "Robert G."   -> "R.G."
+        "Joe"         -> "J."
+        "Yong"        -> "Y."
+        "H.-T."       -> "H.-T."
+        "Jean-Pierre" -> "J.-P."
+    """
     pieces: list[str] = []
+
     for token in re.split(r"\s+", given.strip()):
         if not token:
             continue
 
-        # Keep existing initial-like forms compact.
-        if re.fullmatch(r"(?:[A-Za-z]\.?)+", token) and len(token.replace(".", "")) <= 4:
-            letters = token.replace(".", "")
-            pieces.append("".join(f"{c}." for c in letters))
+        # Preserve already-initialized forms such as R., R.G., or H.-T.
+        compact = token.replace(" ", "")
+        if "." in compact and all(
+            ch.isalpha() or ch in ".-" for ch in compact
+        ):
+            if not compact.endswith("."):
+                compact += "."
+            pieces.append(compact)
             continue
 
-        # Hyphenated given names become e.g. H.-T.
-        hyphen_parts = token.split("-")
-        hp = []
-        for part in hyphen_parts:
-            match = re.search(r"[^\W\d_]", part, flags=re.UNICODE)
-            hp.append(f"{match.group(0).upper()}." if match else "")
-        pieces.append("-".join(hp))
+        # Hyphenated full names: Jean-Pierre -> J.-P.
+        if "-" in token:
+            subparts = token.split("-")
+            initial_parts: list[str] = []
+            for part in subparts:
+                first = next((ch for ch in part if ch.isalpha()), None)
+                if first:
+                    initial_parts.append(first.upper() + ".")
+            if initial_parts:
+                pieces.append("-".join(initial_parts))
+            continue
+
+        # Ordinary full given name: Joe -> J., Yong -> Y.
+        first = next((ch for ch in token if ch.isalpha()), None)
+        if first:
+            pieces.append(first.upper() + ".")
 
     return "".join(pieces)
-
 
 def display_author(full_name: str) -> str:
     """
@@ -481,7 +542,7 @@ def render_html(
             )
 
         rid = record_id(hit)
-        title = html.escape(title_for(metadata), quote=False)
+        title = title_for(metadata)
         authors = html.escape(format_authors(metadata, max_authors), quote=False)
         citation = html.escape(format_journal_citation(metadata), quote=False)
         url = INSPIRE_LITERATURE_URL.format(urllib.parse.quote(rid, safe=""))
@@ -527,6 +588,7 @@ def main() -> int:
     args.output.write_text(output, encoding="utf-8")
 
     print(
+        f"[generate_publications.py {GENERATOR_VERSION}] "
         f"Wrote {args.output} with {len(unique)} unique published article(s) "
         f"from {len(authors)} author signature(s)."
     )
