@@ -1,0 +1,983 @@
+#!/usr/bin/env python3
+"""
+Generate publications.html for LQCDSciDAC.github.io from INSPIRE-HEP.
+
+Features
+--------
+- Query published/refereed journal articles for INSPIRE author signatures.
+- Default year cutoff: 2002 onward.
+- Optional local PDF full-text filtering via --search-term.
+- Optional forced include/exclude INSPIRE literature IDs from files.
+- De-duplicate by INSPIRE literature ID.
+- Sort by publication date, newest first.
+- Preserve INSPIRE MathML in titles.
+
+Examples
+--------
+    python3 generate_publications_v8.py \
+        --authors-file authors.txt \
+        --output publications.html
+
+    python3 generate_publications_v8.py \
+        --authors-file authors.txt \
+        --search-term SciDAC \
+        --include-ids-file include_ids.txt \
+        --exclude-ids-file exclude_ids.txt \
+        --verbose \
+        --output publications.html
+"""
+
+from __future__ import annotations
+
+import argparse
+import html
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import date
+from pathlib import Path
+from typing import Any, Iterable
+
+
+GENERATOR_VERSION = "2026-08-08.10"
+DEFAULT_SINCE_YEAR = 2002
+
+API_URL = "https://inspirehep.net/api/literature"
+INSPIRE_LITERATURE_URL = "https://inspirehep.net/literature/{}"
+REQUEST_DELAY = 0.40
+PAGE_SIZE = 1000
+
+FIELDS = ",".join(
+    [
+        "titles",
+        "authors.full_name",
+        "collaborations",
+        "publication_info",
+        "imprints",
+        "document_type",
+        "refereed",
+        "earliest_date",
+        "control_number",
+        "documents",
+        "arxiv_eprints.value",
+    ]
+)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate the LQCD SciDAC publications page from INSPIRE-HEP."
+        )
+    )
+    parser.add_argument(
+        "authors",
+        nargs="*",
+        help='INSPIRE author signatures, e.g. "R.G.Edwards.1"',
+    )
+    parser.add_argument(
+        "--authors-file",
+        type=Path,
+        help="One INSPIRE author signature per line.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path("publications.html"),
+        help="Output file (default: publications.html).",
+    )
+    parser.add_argument(
+        "--since-year",
+        type=int,
+        default=DEFAULT_SINCE_YEAR,
+        help=(
+            "Keep normal-query publications with journal publication year >= "
+            f"this value (default: {DEFAULT_SINCE_YEAR})."
+        ),
+    )
+    parser.add_argument(
+        "--search-term",
+        type=str,
+        default=None,
+        help=(
+            "Optional case-insensitive substring to search for in each paper's "
+            "actual PDF text. Example: --search-term SciDAC."
+        ),
+    )
+    parser.add_argument(
+        "--include-ids-file",
+        type=Path,
+        default=None,
+        help=(
+            "Optional file of forced-in INSPIRE records. Format: ID followed by "
+            "optional publication citation text, e.g. "
+            "'3076938 IPDPS 2026, 307-320'. Forced includes bypass author, "
+            "publication-status, year, and full-text filters."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-ids-file",
+        type=Path,
+        default=None,
+        help=(
+            "Optional file of INSPIRE literature IDs to never include, one per "
+            "line. Exclusion takes precedence over forced inclusion."
+        ),
+    )
+    parser.add_argument(
+        "--max-authors",
+        type=int,
+        default=20,
+        help=(
+            "Maximum number of authors printed before using 'et al.' "
+            "(default: 20; use 0 to print every author)."
+        ),
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print retrieval, PDF-search, and override details.",
+    )
+    return parser.parse_args()
+
+
+def load_authors(args: argparse.Namespace) -> list[str]:
+    authors: list[str] = []
+
+    for author in args.authors:
+        author = author.strip()
+        if author:
+            authors.append(author)
+
+    if args.authors_file:
+        for line in args.authors_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                authors.append(line)
+
+    authors = list(dict.fromkeys(authors))
+    if not authors:
+        raise SystemExit(
+            "No authors supplied. Pass author signatures or use --authors-file."
+        )
+    return authors
+
+
+def load_include_records(path: Path | None) -> dict[str, str]:
+    """
+    Read forced-include INSPIRE literature IDs and optional publication text.
+
+    Format:
+        3076938 IPDPS 2026, 307-320
+        2689623 PASC 2023, 1-10
+        2139760 IPDPS 2022, 135-145
+
+    The first whitespace-delimited field is the INSPIRE literature ID.
+    Everything after it is used verbatim as the publication citation text.
+
+    Blank lines and # comments are ignored. A bare ID is also accepted, in
+    which case normal INSPIRE publication metadata is used when available.
+    """
+    if path is None:
+        return {}
+
+    records: dict[str, str] = {}
+
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        parts = line.split(maxsplit=1)
+        id_part = parts[0]
+        citation = parts[1].strip() if len(parts) > 1 else ""
+
+        if id_part.isdigit():
+            rid = id_part
+        else:
+            match = re.fullmatch(
+                r"https?://(?:www\.)?inspirehep\.net/literature/(\d+)/?",
+                id_part,
+                flags=re.IGNORECASE,
+            )
+            if not match:
+                raise ValueError(
+                    f"Invalid INSPIRE literature ID in {path}: {raw!r}"
+                )
+            rid = match.group(1)
+
+        records[rid] = citation
+
+    return records
+
+
+def load_exclude_ids(path: Path | None) -> set[str]:
+    """
+    Read INSPIRE literature IDs to exclude.
+
+    Each non-comment line may be a bare numeric ID or full INSPIRE URL.
+    """
+    if path is None:
+        return set()
+
+    ids: set[str] = set()
+
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        if line.isdigit():
+            ids.add(line)
+            continue
+
+        match = re.fullmatch(
+            r"https?://(?:www\.)?inspirehep\.net/literature/(\d+)/?",
+            line,
+            flags=re.IGNORECASE,
+        )
+        if match:
+            ids.add(match.group(1))
+            continue
+
+        raise ValueError(f"Invalid INSPIRE literature ID in {path}: {raw!r}")
+
+    return ids
+
+
+def fetch_record_by_id(rid: str) -> dict[str, Any]:
+    """
+    Fetch one INSPIRE literature record directly.
+
+    Forced inclusions bypass publication-status, author, year, and full-text
+    filters.
+    """
+    rid = str(rid).strip()
+    if not rid.isdigit():
+        raise ValueError(f"Invalid INSPIRE literature ID: {rid!r}")
+
+    params = {"fields": FIELDS}
+    url = f"{API_URL}/{rid}?{urllib.parse.urlencode(params)}"
+    data = get_json(url)
+
+    if "metadata" not in data:
+        raise RuntimeError(f"Unexpected INSPIRE response for literature ID {rid}")
+
+    data.setdefault("id", rid)
+    return data
+
+
+def get_json(url: str, max_attempts: int = 6) -> dict[str, Any]:
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "LQCDSciDAC-publications-generator/1.0",
+    }
+
+    for attempt in range(1, max_attempts + 1):
+        request = urllib.request.Request(url, headers=headers)
+
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                payload = json.load(response)
+            time.sleep(REQUEST_DELAY)
+            return payload
+
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                retry_after = exc.headers.get("Retry-After")
+                try:
+                    wait = max(float(retry_after), 5.0) if retry_after else 5.0
+                except ValueError:
+                    wait = 5.0
+            elif 500 <= exc.code < 600:
+                wait = min(2**attempt, 20)
+            else:
+                detail = exc.read().decode("utf-8", errors="replace")
+                raise RuntimeError(
+                    f"INSPIRE returned HTTP {exc.code} for {url}\n{detail}"
+                ) from exc
+
+            if attempt == max_attempts:
+                raise RuntimeError(
+                    f"INSPIRE request failed after {max_attempts} attempts: {url}"
+                ) from exc
+
+            print(
+                f"INSPIRE HTTP {exc.code}; retrying in {wait:g} s...",
+                file=sys.stderr,
+            )
+            time.sleep(wait)
+
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt == max_attempts:
+                raise RuntimeError(
+                    f"INSPIRE request failed after {max_attempts} attempts: {url}"
+                ) from exc
+
+            wait = min(2**attempt, 20)
+            print(
+                f"Network error ({exc}); retrying in {wait:g} s...",
+                file=sys.stderr,
+            )
+            time.sleep(wait)
+
+    raise AssertionError("unreachable")
+
+
+def query_for_author(author: str) -> str:
+    # tc p = published in a refereed journal.
+    return f"a {author} and tc p and document_type:article"
+
+
+def fetch_author_records(
+    author: str,
+    verbose: bool = False,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    page = 1
+
+    while True:
+        params = {
+            "q": query_for_author(author),
+            "size": PAGE_SIZE,
+            "page": page,
+            "fields": FIELDS,
+        }
+        url = f"{API_URL}?{urllib.parse.urlencode(params)}"
+
+        if verbose:
+            print(f"[INSPIRE] {author}: page {page}", file=sys.stderr)
+
+        data = get_json(url)
+        page_hits = data.get("hits", {}).get("hits", [])
+        records.extend(page_hits)
+
+        total_obj = data.get("hits", {}).get("total", 0)
+        total = (
+            int(total_obj.get("value", 0))
+            if isinstance(total_obj, dict)
+            else int(total_obj or 0)
+        )
+
+        if not page_hits or len(records) >= total or len(page_hits) < PAGE_SIZE:
+            break
+        page += 1
+
+    if verbose:
+        print(
+            f"[INSPIRE] {author}: retrieved {len(records)} published article(s)",
+            file=sys.stderr,
+        )
+
+    return records
+
+
+def fetch_record_by_id(rid: str) -> dict[str, Any]:
+    """
+    Fetch one INSPIRE literature record directly.
+
+    This is used for forced inclusions, so it does not require the record to be
+    published, refereed, after the year cutoff, associated with one of the
+    queried authors, or to match --search-term.
+    """
+    rid = str(rid).strip()
+    if not rid.isdigit():
+        raise ValueError(f"Invalid INSPIRE literature ID: {rid!r}")
+
+    params = {"fields": FIELDS}
+    url = f"{API_URL}/{rid}?{urllib.parse.urlencode(params)}"
+    data = get_json(url)
+
+    if "metadata" not in data:
+        raise RuntimeError(f"Unexpected INSPIRE response for literature ID {rid}")
+
+    data.setdefault("id", rid)
+    return data
+
+
+def choose_publication_info(metadata: dict[str, Any]) -> dict[str, Any]:
+    infos = metadata.get("publication_info") or []
+
+    for info in infos:
+        if (
+            info.get("journal_title")
+            and not info.get("hidden", False)
+            and info.get("material") == "publication"
+        ):
+            return info
+
+    for info in infos:
+        if info.get("journal_title") and not info.get("hidden", False):
+            return info
+
+    return infos[0] if infos else {}
+
+
+_DATE_RE = re.compile(r"^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?")
+
+
+def normalized_date(value: Any) -> date | None:
+    if value is None:
+        return None
+
+    match = _DATE_RE.match(str(value))
+    if not match:
+        return None
+
+    year = int(match.group(1))
+    month = int(match.group(2) or 1)
+    day = int(match.group(3) or 1)
+
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def publication_date(metadata: dict[str, Any]) -> date:
+    imprint_dates = [
+        d
+        for imprint in (metadata.get("imprints") or [])
+        if (d := normalized_date(imprint.get("date"))) is not None
+    ]
+    if imprint_dates:
+        return min(imprint_dates)
+
+    pub = choose_publication_info(metadata)
+    if pub.get("year"):
+        return date(int(pub["year"]), 1, 1)
+
+    fallback = normalized_date(metadata.get("earliest_date"))
+    if fallback:
+        return fallback
+
+    return date.min
+
+
+def publication_year(metadata: dict[str, Any]) -> int:
+    pub = choose_publication_info(metadata)
+    if pub.get("year"):
+        return int(pub["year"])
+
+    d = publication_date(metadata)
+    return d.year if d != date.min else 0
+
+
+def record_id(hit: dict[str, Any]) -> str:
+    rid = hit.get("id")
+    if rid is None:
+        rid = hit.get("metadata", {}).get("control_number")
+    if rid is None:
+        raise ValueError("INSPIRE hit has no record ID/control_number")
+    return str(rid)
+
+
+MATHML_TAGS = (
+    "math|mrow|mi|mo|mn|msub|msup|mover|munder|munderover|"
+    "mtext|mfrac|msqrt|mroot|mtable|mtr|mtd|mfenced|mspace|"
+    "semantics|annotation|annotation-xml"
+)
+
+_MATHML_ESCAPED_TAG_RE = re.compile(
+    rf"""\\(?=</?(?:{MATHML_TAGS})\b)""",
+    re.IGNORECASE,
+)
+
+
+def title_for(metadata: dict[str, Any]) -> str:
+    titles = metadata.get("titles") or []
+    if not titles:
+        return "(untitled)"
+
+    title = str(titles[0].get("title") or "(untitled)")
+    title = html.unescape(title)
+    title = _MATHML_ESCAPED_TAG_RE.sub("", title)
+    return title
+
+
+def initials(given: str) -> str:
+    pieces: list[str] = []
+
+    for token in re.split(r"\s+", given.strip()):
+        if not token:
+            continue
+
+        compact = token.replace(" ", "")
+
+        if "." in compact and all(ch.isalpha() or ch in ".-" for ch in compact):
+            if not compact.endswith("."):
+                compact += "."
+            pieces.append(compact)
+            continue
+
+        if "-" in token:
+            subparts = token.split("-")
+            initial_parts: list[str] = []
+            for part in subparts:
+                first = next((ch for ch in part if ch.isalpha()), None)
+                if first:
+                    initial_parts.append(first.upper() + ".")
+            if initial_parts:
+                pieces.append("-".join(initial_parts))
+            continue
+
+        first = next((ch for ch in token if ch.isalpha()), None)
+        if first:
+            pieces.append(first.upper() + ".")
+
+    return "".join(pieces)
+
+
+def display_author(full_name: str) -> str:
+    if "," not in full_name:
+        return full_name.strip()
+
+    surname, given = full_name.split(",", 1)
+    return f"{initials(given)} {surname.strip()}".strip()
+
+
+def format_authors(metadata: dict[str, Any], max_authors: int) -> str:
+    raw = [
+        a.get("full_name", "").strip()
+        for a in (metadata.get("authors") or [])
+        if a.get("full_name")
+    ]
+    authors = [display_author(a) for a in raw]
+
+    collaborations = [
+        c.get("value", "").strip()
+        for c in (metadata.get("collaborations") or [])
+        if c.get("value")
+    ]
+
+    if not authors:
+        return ", ".join(collaborations) if collaborations else "(authors unavailable)"
+
+    if max_authors > 0 and len(authors) > max_authors:
+        text = f"{authors[0]} et al."
+        if collaborations:
+            text += " [" + ", ".join(collaborations) + "]"
+        return text
+
+    return ", ".join(authors)
+
+
+def article_locator(pub: dict[str, Any]) -> str:
+    artid = pub.get("artid")
+    page_start = pub.get("page_start")
+    page_end = pub.get("page_end")
+
+    if artid:
+        return str(artid)
+    if page_start and page_end and str(page_end) != str(page_start):
+        return f"{page_start}-{page_end}"
+    if page_start:
+        return str(page_start)
+    return ""
+
+
+def format_journal_citation(metadata: dict[str, Any]) -> str:
+    override = str(
+        metadata.get("_lqcdscidac_publication_override") or ""
+    ).strip()
+    if override:
+        return override
+
+    pub = choose_publication_info(metadata)
+
+    journal = str(pub.get("journal_title") or "").strip()
+    volume = str(pub.get("journal_volume") or "").strip()
+    issue = str(pub.get("journal_issue") or "").strip()
+    year = str(pub.get("year") or "").strip()
+    locator = article_locator(pub)
+
+    if not journal:
+        freetext = str(pub.get("pubinfo_freetext") or "").strip()
+        return freetext or "Unpublished / publication information unavailable"
+
+    parts = [journal]
+    if volume:
+        parts.append(volume)
+    if year:
+        parts.append(f"({year})")
+
+    citation = " ".join(parts)
+
+    if issue:
+        citation += f" {issue}"
+    if locator:
+        citation += f", {locator}"
+
+    return citation
+
+
+def candidate_pdf_urls(metadata: dict[str, Any]) -> list[str]:
+    urls: list[str] = []
+
+    for doc in metadata.get("documents") or []:
+        if doc.get("hidden"):
+            continue
+        if doc.get("fulltext") is False:
+            continue
+
+        url = str(doc.get("url") or "").strip()
+        if not url:
+            continue
+
+        if url.startswith("/api/files/"):
+            url = "https://inspirehep.net" + url
+
+        if url.startswith(("http://", "https://")):
+            urls.append(url)
+
+    for entry in metadata.get("arxiv_eprints") or []:
+        arxiv_id = str(entry.get("value") or "").strip()
+        if arxiv_id:
+            urls.append(
+                f"https://arxiv.org/pdf/{urllib.parse.quote(arxiv_id, safe='/')}"
+            )
+
+    return list(dict.fromkeys(urls))
+
+
+def download_binary(url: str, destination: Path, max_attempts: int = 4) -> None:
+    headers = {
+        "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.1",
+        "User-Agent": "LQCDSciDAC-publications-generator/1.0",
+    }
+
+    for attempt in range(1, max_attempts + 1):
+        request = urllib.request.Request(url, headers=headers)
+
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                destination.write_bytes(response.read())
+            return
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+            if attempt == max_attempts:
+                raise RuntimeError(f"Could not download {url}: {exc}") from exc
+            time.sleep(min(2**attempt, 10))
+
+
+def pdf_to_text(pdf_path: Path) -> str:
+    executable = shutil.which("pdftotext")
+    if not executable:
+        raise RuntimeError(
+            "--search-term requires the 'pdftotext' command. "
+            "On macOS install it with: brew install poppler"
+        )
+
+    result = subprocess.run(
+        [executable, "-layout", str(pdf_path), "-"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        err = result.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"pdftotext failed: {err or 'unknown error'}")
+
+    return result.stdout.decode("utf-8", errors="replace")
+
+
+def paper_contains_term(
+    hit: dict[str, Any],
+    search_term: str,
+    verbose: bool = False,
+) -> bool:
+    """
+    Download candidate PDFs and perform a case-insensitive substring search.
+
+    search_term='SciDAC' therefore also matches strings such as SciDAC5 and
+    SciDAC-5.
+    """
+    term = search_term.strip()
+    if not term:
+        raise ValueError("--search-term must not be empty")
+
+    metadata = hit.get("metadata", {})
+    rid = record_id(hit)
+    urls = candidate_pdf_urls(metadata)
+
+    if not urls:
+        if verbose:
+            print(
+                f"[fulltext] INSPIRE {rid}: no accessible PDF URL; excluding",
+                file=sys.stderr,
+            )
+        return False
+
+    with tempfile.TemporaryDirectory(prefix="lqcdscidac-pub-") as tmp:
+        pdf_path = Path(tmp) / f"{rid}.pdf"
+
+        for url in urls:
+            try:
+                if verbose:
+                    print(
+                        f"[fulltext] INSPIRE {rid}: downloading {url}",
+                        file=sys.stderr,
+                    )
+
+                download_binary(url, pdf_path)
+                extracted = pdf_to_text(pdf_path)
+
+                if term.casefold() in extracted.casefold():
+                    if verbose:
+                        print(
+                            f'[fulltext] INSPIRE {rid}: MATCH "{term}"',
+                            file=sys.stderr,
+                        )
+                    return True
+
+                if verbose:
+                    print(
+                        f'[fulltext] INSPIRE {rid}: no match for "{term}" in this PDF',
+                        file=sys.stderr,
+                    )
+
+            except RuntimeError as exc:
+                if verbose:
+                    print(
+                        f"[fulltext] INSPIRE {rid}: {exc}",
+                        file=sys.stderr,
+                    )
+
+    if verbose:
+        print(
+            f"[fulltext] INSPIRE {rid}: all PDF candidates exhausted; excluding",
+            file=sys.stderr,
+        )
+
+    return False
+
+
+def filter_by_fulltext(
+    records: dict[str, dict[str, Any]],
+    search_term: str,
+    verbose: bool = False,
+) -> dict[str, dict[str, Any]]:
+    matched: dict[str, dict[str, Any]] = {}
+
+    total = len(records)
+    for index, (rid, hit) in enumerate(records.items(), start=1):
+        if verbose:
+            print(
+                f'[fulltext] {index}/{total}: INSPIRE {rid}, searching "{search_term}"',
+                file=sys.stderr,
+            )
+
+        if paper_contains_term(hit, search_term, verbose=verbose):
+            matched[rid] = hit
+
+    return matched
+
+
+def deduplicate(records: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    unique: dict[str, dict[str, Any]] = {}
+    for hit in records:
+        unique[record_id(hit)] = hit
+    return unique
+
+
+def render_html(
+    records: Iterable[dict[str, Any]],
+    max_authors: int,
+    search_term: str | None = None,
+) -> str:
+    records = list(records)
+
+    records.sort(
+        key=lambda hit: (
+            publication_date(hit.get("metadata", {})),
+            int(record_id(hit)) if record_id(hit).isdigit() else 0,
+        ),
+        reverse=True,
+    )
+
+    lines = [
+        "---",
+        "layout: default",
+        "---",
+        "",
+        '<a id="publications"></a><h1>Journal Publications</h1>',
+        "",
+        "<!-- This file is generated by generate_publications_v8.py. -->",
+    ]
+
+    if search_term:
+        lines.append(
+            f"<!-- Local PDF text filter: {html.escape(search_term, quote=True)} -->"
+        )
+
+    lines.extend(
+        [
+            '<table class="publications">',
+            "",
+        ]
+    )
+
+    current_year: int | None = None
+
+    for hit in records:
+        metadata = hit.get("metadata", {})
+        year = publication_year(metadata)
+
+        if year != current_year:
+            current_year = year
+            year_label = str(year) if year else "Unknown year"
+            anchor = f"year{year}" if year else "year-unknown"
+
+            lines.extend(
+                [
+                    "<!-- ================================================================================ -->",
+                    f"  <!-- {year_label} -->",
+                    f'  <tr class="year"><td colspan="2">'
+                    f'<a id="{anchor}"></a><h2>{html.escape(year_label)}</h2>'
+                    f"</td></tr>",
+                    "",
+                ]
+            )
+
+        rid = record_id(hit)
+        title = title_for(metadata)
+        authors = html.escape(format_authors(metadata, max_authors), quote=False)
+        citation = html.escape(format_journal_citation(metadata), quote=False)
+        url = INSPIRE_LITERATURE_URL.format(urllib.parse.quote(rid, safe=""))
+
+        lines.extend(
+            [
+                "<!-- ******* row  ******* -->",
+                '  <tr class="publications">',
+                '    <td class="publications">',
+                f"      <b>{title}</b><br/>",
+                f"      {authors}",
+                "    </td>",
+                '    <td class="publications">',
+                f'      <a href="{url}">{citation}</a>',
+                "    </td>",
+                "  </tr>",
+                "",
+            ]
+        )
+
+    lines.extend(["</table>", ""])
+    return "\n".join(lines)
+
+
+def main() -> int:
+    args = parse_args()
+    authors = load_authors(args)
+
+    include_records = load_include_records(args.include_ids_file)
+    exclude_ids = load_exclude_ids(args.exclude_ids_file)
+
+    overlap = set(include_records) & exclude_ids
+    if overlap and args.verbose:
+        print(
+            "[override] IDs in both include and exclude files will be excluded: "
+            + ", ".join(sorted(overlap, key=int)),
+            file=sys.stderr,
+        )
+
+    # 1. Normal author-based, published/refereed query.
+    all_hits: list[dict[str, Any]] = []
+    for author in authors:
+        all_hits.extend(fetch_author_records(author, verbose=args.verbose))
+
+    unique = deduplicate(all_hits)
+
+    # 2. Normal year cutoff.
+    unique = {
+        rid: hit
+        for rid, hit in unique.items()
+        if publication_year(hit.get("metadata", {})) >= args.since_year
+    }
+
+    # 3. Optional PDF full-text filter.
+    if args.search_term:
+        unique = filter_by_fulltext(
+            unique,
+            search_term=args.search_term,
+            verbose=args.verbose,
+        )
+
+    # 4. Forced includes bypass ALL normal filters above.
+    for rid in sorted(include_records, key=int):
+        if rid in exclude_ids:
+            continue
+
+        if rid not in unique:
+            if args.verbose:
+                print(
+                    f"[override] forcing inclusion of INSPIRE {rid}",
+                    file=sys.stderr,
+                )
+            unique[rid] = fetch_record_by_id(rid)
+
+        citation_override = include_records.get(rid, "").strip()
+        if citation_override:
+            unique[rid].setdefault("metadata", {})[
+                "_lqcdscidac_publication_override"
+            ] = citation_override
+
+        if args.verbose and rid in unique and citation_override:
+            print(
+                f'[override] INSPIRE {rid}: citation="{citation_override}"',
+                file=sys.stderr,
+            )
+
+        elif args.verbose:
+            print(
+                f"[override] INSPIRE {rid} already present",
+                file=sys.stderr,
+            )
+
+    # 5. Forced excludes always win.
+    for rid in sorted(exclude_ids, key=int):
+        if rid in unique and args.verbose:
+            print(
+                f"[override] excluding INSPIRE {rid}",
+                file=sys.stderr,
+            )
+        unique.pop(rid, None)
+
+    output = render_html(
+        unique.values(),
+        max_authors=args.max_authors,
+        search_term=args.search_term,
+    )
+    args.output.write_text(output, encoding="utf-8")
+
+    filter_note = (
+        f' matching PDF text term "{args.search_term}"'
+        if args.search_term
+        else ""
+    )
+    override_note = (
+        f"; forced include IDs: {len(include_records)}, "
+        f"forced exclude IDs: {len(exclude_ids)}"
+        if include_records or exclude_ids
+        else ""
+    )
+
+    print(
+        f"[generate_publications.py {GENERATOR_VERSION}] "
+        f"Wrote {args.output} with {len(unique)} unique article(s)"
+        f"{filter_note} from {len(authors)} author signature(s)"
+        f"{override_note}."
+    )
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
