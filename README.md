@@ -4,7 +4,8 @@ One can generate the publications.html file directly via
 python3 generate_publications_v7.py \
     --authors-file authors.txt \
     --search-term SciDAC \
-    --verbose \
+    --include-ids-file include_ids.txt \
+    --exclude-ids-file exclude_ids.txt \
     --output publications.html
 
 Either pass the via the authors.txt or on the command line.
