@@ -25,6 +25,9 @@ import html
 import json
 import re
 import sys
+import shutil
+import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -34,7 +37,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-GENERATOR_VERSION = "2026-08-08.6"
+GENERATOR_VERSION = "2026-08-08.7"
 DEFAULT_SINCE_YEAR = 2002  # include publications from 2002 onward
 
 API_URL = "https://inspirehep.net/api/literature"
@@ -56,6 +59,8 @@ FIELDS = ",".join(
         "refereed",
         "earliest_date",
         "control_number",
+        "documents",
+        "arxiv_eprints.value",
     ]
 )
 
@@ -98,9 +103,9 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help=(
-            "Optional INSPIRE full-text search term. If supplied, only papers "
-            "whose indexed full text contains this term are included. "
-            "Example: --search-term SciDAC"
+            "Optional case-insensitive substring to search for in each paper's "
+            "actual PDF text. If supplied, only matching papers are included. "
+            "Example: --search-term SciDAC (also matches SciDAC5)."
         ),
     )
     parser.add_argument(
@@ -199,33 +204,13 @@ def get_json(url: str, max_attempts: int = 6) -> dict[str, Any]:
     raise AssertionError("unreachable")
 
 
-def inspire_fulltext_clause(search_term: str) -> str:
-    """
-    Build an INSPIRE full-text search clause.
-
-    INSPIRE supports queries such as:
-        ft quark
-        ft "chiral symmetry breaking"
-    """
-    term = search_term.strip()
-    if not term:
-        raise ValueError("--search-term must not be empty")
-
-    term = term.replace("\\", "\\\\").replace('"', '\\"')
-    return f'ft "{term}"'
-
-
-def query_for_author(author: str, search_term: str | None = None) -> str:
+def query_for_author(author: str) -> str:
     # tc p = "Published (in a refereed journal)" in INSPIRE's search syntax.
     # document_type:article excludes books, theses, proceedings, etc.
-    query = f"a {author} and tc p and document_type:article"
-    if search_term:
-        query += f" and {inspire_fulltext_clause(search_term)}"
-    return query
+    return f"a {author} and tc p and document_type:article"
 
 def fetch_author_records(
     author: str,
-    search_term: str | None = None,
     verbose: bool = False,
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
@@ -233,7 +218,7 @@ def fetch_author_records(
 
     while True:
         params = {
-            "q": query_for_author(author, search_term=search_term),
+            "q": query_for_author(author),
             "size": PAGE_SIZE,
             "page": page,
             "fields": FIELDS,
@@ -523,6 +508,175 @@ def format_journal_citation(metadata: dict[str, Any]) -> str:
     return citation
 
 
+def candidate_pdf_urls(metadata: dict[str, Any]) -> list[str]:
+    """
+    Return candidate full-text PDF URLs in preferred order.
+
+    1. Public full-text documents attached to the INSPIRE record.
+    2. arXiv PDF fallback, when an arXiv identifier is present.
+    """
+    urls: list[str] = []
+
+    for doc in metadata.get("documents") or []:
+        if doc.get("hidden"):
+            continue
+        if doc.get("fulltext") is False:
+            continue
+
+        url = str(doc.get("url") or "").strip()
+        if not url:
+            continue
+
+        if url.startswith("/api/files/"):
+            url = "https://inspirehep.net" + url
+
+        if url.startswith(("http://", "https://")):
+            urls.append(url)
+
+    for entry in metadata.get("arxiv_eprints") or []:
+        arxiv_id = str(entry.get("value") or "").strip()
+        if arxiv_id:
+            urls.append(f"https://arxiv.org/pdf/{urllib.parse.quote(arxiv_id, safe='/')}")
+
+    # Preserve order while removing duplicates.
+    return list(dict.fromkeys(urls))
+
+
+def download_binary(url: str, destination: Path, max_attempts: int = 4) -> None:
+    headers = {
+        "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.1",
+        "User-Agent": "LQCDSciDAC-publications-generator/1.0",
+    }
+
+    for attempt in range(1, max_attempts + 1):
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                destination.write_bytes(response.read())
+            return
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+            if attempt == max_attempts:
+                raise RuntimeError(f"Could not download {url}: {exc}") from exc
+            time.sleep(min(2 ** attempt, 10))
+
+
+def pdf_to_text(pdf_path: Path) -> str:
+    """
+    Extract text from a PDF using the `pdftotext` command from Poppler.
+    """
+    executable = shutil.which("pdftotext")
+    if not executable:
+        raise RuntimeError(
+            "--search-term requires the 'pdftotext' command. "
+            "On macOS install it with: brew install poppler"
+        )
+
+    result = subprocess.run(
+        [executable, "-layout", str(pdf_path), "-"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    if result.returncode != 0:
+        err = result.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"pdftotext failed: {err or 'unknown error'}")
+
+    return result.stdout.decode("utf-8", errors="replace")
+
+
+def paper_contains_term(
+    hit: dict[str, Any],
+    search_term: str,
+    verbose: bool = False,
+) -> bool:
+    """
+    Download the paper PDF and perform a case-insensitive substring search.
+
+    This is intentionally a literal substring search rather than an INSPIRE
+    indexed full-text query. For example, search_term='SciDAC' matches
+    'SciDAC', 'SciDAC5', and 'SciDAC-5'.
+    """
+    term = search_term.strip()
+    if not term:
+        raise ValueError("--search-term must not be empty")
+
+    metadata = hit.get("metadata", {})
+    rid = record_id(hit)
+    urls = candidate_pdf_urls(metadata)
+
+    if not urls:
+        if verbose:
+            print(
+                f"[fulltext] INSPIRE {rid}: no accessible PDF URL; excluding",
+                file=sys.stderr,
+            )
+        return False
+
+    errors: list[str] = []
+
+    with tempfile.TemporaryDirectory(prefix="lqcdscidac-pub-") as tmp:
+        pdf_path = Path(tmp) / f"{rid}.pdf"
+
+        for url in urls:
+            try:
+                if verbose:
+                    print(f"[fulltext] INSPIRE {rid}: downloading {url}", file=sys.stderr)
+
+                download_binary(url, pdf_path)
+                extracted = pdf_to_text(pdf_path)
+
+                if term.casefold() in extracted.casefold():
+                    if verbose:
+                        print(
+                            f'[fulltext] INSPIRE {rid}: MATCH "{term}"',
+                            file=sys.stderr,
+                        )
+                    return True
+
+                if verbose:
+                    print(
+                        f'[fulltext] INSPIRE {rid}: no match for "{term}" in this PDF',
+                        file=sys.stderr,
+                    )
+
+            except RuntimeError as exc:
+                errors.append(str(exc))
+                if verbose:
+                    print(
+                        f"[fulltext] INSPIRE {rid}: {exc}",
+                        file=sys.stderr,
+                    )
+
+    if verbose and errors:
+        print(
+            f"[fulltext] INSPIRE {rid}: all PDF candidates exhausted; excluding",
+            file=sys.stderr,
+        )
+    return False
+
+
+def filter_by_fulltext(
+    records: dict[str, dict[str, Any]],
+    search_term: str,
+    verbose: bool = False,
+) -> dict[str, dict[str, Any]]:
+    matched: dict[str, dict[str, Any]] = {}
+
+    total = len(records)
+    for index, (rid, hit) in enumerate(records.items(), start=1):
+        if verbose:
+            print(
+                f'[fulltext] {index}/{total}: INSPIRE {rid}, searching "{search_term}"',
+                file=sys.stderr,
+            )
+
+        if paper_contains_term(hit, search_term, verbose=verbose):
+            matched[rid] = hit
+
+    return matched
+
+
 def deduplicate(records: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     unique: dict[str, dict[str, Any]] = {}
     for hit in records:
@@ -558,7 +712,7 @@ def render_html(
 
     if search_term:
         lines.append(
-            f"<!-- INSPIRE full-text filter: {html.escape(search_term, quote=True)} -->"
+            f"<!-- Local PDF text filter: {html.escape(search_term, quote=True)} -->"
         )
 
     lines.extend([
@@ -619,13 +773,7 @@ def main() -> int:
 
     all_hits: list[dict[str, Any]] = []
     for author in authors:
-        all_hits.extend(
-            fetch_author_records(
-                author,
-                search_term=args.search_term,
-                verbose=args.verbose,
-            )
-        )
+        all_hits.extend(fetch_author_records(author, verbose=args.verbose))
 
     unique = deduplicate(all_hits)
 
@@ -635,6 +783,13 @@ def main() -> int:
         if publication_year(hit.get("metadata", {})) >= args.since_year
     }
 
+    if args.search_term:
+        unique = filter_by_fulltext(
+            unique,
+            search_term=args.search_term,
+            verbose=args.verbose,
+        )
+
     output = render_html(
         unique.values(),
         max_authors=args.max_authors,
@@ -643,7 +798,7 @@ def main() -> int:
     args.output.write_text(output, encoding="utf-8")
 
     filter_note = (
-        f' matching full-text term "{args.search_term}"'
+        f' matching PDF text term "{args.search_term}"'
         if args.search_term
         else ""
     )
