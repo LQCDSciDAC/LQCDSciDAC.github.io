@@ -17,6 +17,10 @@ at the repository root; do not edit generated `_site/` output.
   `scidac_pi_2026.html`. Meeting assets live in `highlights/2026_SciDAC_PI/`.
   The meeting page has two-sentence descriptions for each talk and poster.
 - Keep navigation pages at the repository root: shared layout links are relative.
+- The 2025 meeting entry is first on `scidac.html`, linking to
+  `scidac_pi_2025.html` with five talk and four poster summaries. All nine
+  presentation links point to PDFs, including the replaced Romero preconditioner
+  poster.
 - Link journal citation bylines to verified `https://doi.org/` URLs, separately
   from highlight-title links. Give each cited paper its own link. Link news-source
   bylines to their published stories.

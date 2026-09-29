@@ -1,5 +1,21 @@
 # Maintenance record
 
+## 2025 meeting archive
+
+- Follow-up: the Romero preconditioner poster was replaced with a valid one-page
+  PDF. Verified its extracted title and content, restored the linked title and
+  standard Poster PDF link, and removed the obsolete source-only notice.
+
+- Added the 2025 SciDAC PI meeting as the first entry on `scidac.html` and created
+  `scidac_pi_2025.html` with two-sentence summaries of all five talks and four
+  posters. Used a crop of the neutron-star image on slide 12 of Edwards's talk.
+- Eight supplied presentation files are valid PDFs. The Romero preconditioner
+  poster is LaTeX source with a `.pdf` suffix; preserved the original and labeled
+  its link as a source download with a `.tex` download filename.
+- Verified all nine presentation links, the thumbnail, and first-entry ordering;
+  checked the crop visually and ran `git diff --check`. Full Jekyll rendering was
+  not verified locally.
+
 ## Citation byline links
 
 - Linked journal bylines on Highlights and SciDAC to publisher DOIs verified

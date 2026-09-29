@@ -1,0 +1,48 @@
+---
+layout: default
+---
+
+<h2>2025 SciDAC PI meeting</h2>
+<p>Talks and posters from the ASCR/NP LQCD SciDAC project at the 2025 SciDAC PI meeting.</p>
+
+<h2>Talks</h2>
+
+<h3><a href="highlights/2025_SciDAC_PI/talks/Edwards_scidac_pi_25.pdf">Fundamental nuclear physics at the exascale and beyond</a></h3>
+<p><strong>Robert Edwards</strong> &middot; <a href="highlights/2025_SciDAC_PI/talks/Edwards_scidac_pi_25.pdf">Talk PDF</a></p>
+<p>This overview connects the project's nuclear-physics goals with advances in gauge-field generation, analysis, and portable software for emerging computing architectures. It highlights scientific results, including constraints on dense matter relevant to neutron stars, alongside the SciDAC partnership's software and workforce achievements.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/talks/Romero_scidac_25.pdf">High-performance computation of correlation functions</a></h3>
+<p><strong>Eloy Romero Alcalde</strong> &middot; <a href="highlights/2025_SciDAC_PI/talks/Romero_scidac_25.pdf">Talk PDF</a></p>
+<p>This talk reviews the computational steps needed to evaluate lattice QCD correlation functions with distillation. It surveys improvements to Dirac-equation solvers, including domain decomposition, multigrid, and incomplete LU preconditioning, together with faster tensor contractions in redstar.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/talks/SLi_ILU_scidac_25.pdf">GPU-capable ILU preconditioner in support of HMC computation and Chroma software</a></h3>
+<p><strong>Sherry Li and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/talks/SLi_ILU_scidac_25.pdf">Talk PDF</a></p>
+<p>This talk describes work to adapt SuperLU's incomplete LU preconditioning and sparse triangular solves for Chroma's lattice QCD workloads. It presents GPU kernel optimizations, batched interfaces, and numerical ILU factorization, with applications to multigrid coarse operators and domain decomposition.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/talks/YSun_neural_scidac_25.pdf">Matrix-free neural preconditioners for the Dirac equations in lattice gauge theory</a></h3>
+<p><strong>Yixuan Sun and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/talks/YSun_neural_scidac_25.pdf">Talk PDF</a></p>
+<p>This talk introduces neural preconditioners that learn from gauge fields without explicitly storing the full Dirac matrix. It explores operator-learning architectures and their ability to accelerate iterative solves and transfer across lattice sizes.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/talks/Buluc_GraphsLBNL_scidac_25.pdf">Graph contractions in Redstar</a></h3>
+<p><strong>Ayd&#305;n Bulu&ccedil; and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/talks/Buluc_GraphsLBNL_scidac_25.pdf">Talk PDF</a></p>
+<p>This talk uses graph representations to improve the scheduling and partitioning of tensor contractions in Redstar. It compares heuristics for reducing peak memory and data movement, and examines how to distribute contraction work across GPUs.</p>
+
+<h2>Posters</h2>
+
+<h3><a href="highlights/2025_SciDAC_PI/posters/Poster_Detmold_LearnedGFPoster_SciDAC2025.pdf">Exploring gauge-fixing conditions with gradient-based optimization</a></h3>
+<p><strong>William Detmold and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/posters/Poster_Detmold_LearnedGFPoster_SciDAC2025.pdf">Poster PDF</a></p>
+<p>This poster introduces a parameterized gauge-fixing functional that includes Landau, Coulomb, and maximal-tree gauges. It develops gradient-based optimization of the gauge choice, using differentiable soft trees to explore schemes relevant to renormalization and signal-to-noise improvement.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/posters/Poster_GaugeGenerationSCiDAC_Henry.pdf">Gauge field generation with exponentiated clover fermions</a></h3>
+<p><strong>Henry Monge-Camacho and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/posters/Poster_GaugeGenerationSCiDAC_Henry.pdf">Poster PDF</a></p>
+<p>This poster describes the implementation of exponentiated clover fermions in Chroma, including support for preconditioned solvers and QUDA multigrid. Molecular-dynamics and Hybrid Monte Carlo tests compare correctness, computational cost, and acceptance rates with the conventional clover action.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/posters/Poster_Romero_corr_scidac_25.pdf">Accelerating the calculation of correlation functions in redstar</a></h3>
+<p><strong>Eloy Romero, Jie Chen, and Robert Edwards</strong> &middot; <a href="highlights/2025_SciDAC_PI/posters/Poster_Romero_corr_scidac_25.pdf">Poster PDF</a></p>
+<p>This poster presents GPU optimizations for the many tensor contractions needed to compute lattice QCD correlation functions. It reports substantial speedups from reducing synchronization and data transfers, batching contractions, and managing the memory demands of baryon tensors.</p>
+
+<h3><a href="highlights/2025_SciDAC_PI/posters/Poster_Romero_precond_scidac_25.pdf">Improving preconditioners for LQCD</a></h3>
+<p><strong>Eloy Romero and collaborators</strong> &middot; <a href="highlights/2025_SciDAC_PI/posters/Poster_Romero_precond_scidac_25.pdf">Poster PDF</a></p>
+<p>This poster explores improvements to Wilson-fermion preconditioners, including a chiral SVD extension for multigrid prolongators. It also investigates incomplete LU and other approximate-inverse methods for accelerating multigrid smoothing and coarse-operator solves.</p>
+
+<p><a href="scidac.html">Back to progress under SciDAC</a></p>

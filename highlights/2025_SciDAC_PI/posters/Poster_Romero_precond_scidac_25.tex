@@ -1,0 +1,721 @@
+\pdfminorversion=3
+\documentclass[final,hyperref={pdfpagelabels=false},table]{beamer}
+
+
+\mode<presentation>
+{
+   %\usetheme{Singapore}
+   %\usetheme{default}
+   \usetheme{boxes}
+   \useinnertheme{rectangles}
+   %\setbeamercovered{transparent}
+   \setbeamertemplate{navigation symbols}{}
+   \setbeamertemplate{itemize/enumerate body begin}{\large}
+   \setbeamertemplate{itemize/enumerate subbody begin}{\large}
+   \setbeamercolor{headline}{use=structure,fg=structure.fg}
+   \setbeamercolor{section in head/foot}{use=structure,bg=structure.fg!25!bg}
+   \setbeamercolor*{block body}{bg=white,fg=black}
+   \setbeamercolor{block title}{use=structure,fg=structure.fg,bg=structure.fg!20!bg}
+   \setbeamercolor{footline}{fg=structure}
+
+   %\setbeamercolor{headline}{fg=structure.fg,bg=black}
+   \setbeamertemplate{headline}{  
+      \leavevmode
+         \begin{beamercolorbox}[sep=1cm,wd=\paperwidth]{headline}
+      \centering
+         \usebeamercolor{title in headline}{\color{fg}\textbf{\LARGE{\inserttitle}}\\[1ex]}
+      \usebeamercolor{author in headline}{\color{fg}\large{\insertauthor},}
+      \usebeamercolor{institute in headline}{\color{fg}\large{\insertinstitute}}
+      \end{beamercolorbox}%
+         %\begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+      %  \rule{0pt}{2pt}
+      %\end{beamercolorbox}
+   }
+   \setbeamertemplate{block begin}{
+      \vskip.75ex
+         \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block title}%
+         \usebeamerfont*{block title}\insertblocktitle
+         \end{beamercolorbox}%
+         {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+      \usebeamerfont{block body}%
+         \begin{beamercolorbox}[rounded=true,shadow=false,sep=1cm,vmode]{block body}%
+   }
+   \setbeamertemplate{block end}{
+      \end{beamercolorbox}
+   }
+   \setbeamertemplate{block example begin}{
+      \vskip.75ex
+         \setbeamercolor{block example title}{bg=red!20}
+         \begin{beamercolorbox}[rounded=true,shadow=true,leftskip=1cm,colsep*=.75ex]{block example title}%
+         \usebeamerfont*{block title}\insertblocktitle
+         \end{beamercolorbox}%
+         {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+      \usebeamerfont{block body}%
+         \begin{beamercolorbox}[rounded=true,shadow=true,sep=1cm,vmode]{block body}%
+   }
+   \setbeamertemplate{block example end}{
+      \end{beamercolorbox}
+   }
+   \setbeamertemplate{footline}{
+      \begin{beamercolorbox}[wd=\paperwidth]{upper separation line foot}
+      \rule{0pt}{2pt}
+      \end{beamercolorbox}
+
+      \begin{beamercolorbox}[leftskip=5cm,rightskip=5cm]{footline}%
+         %\qquad \parbox[t][1em][b]{.35\textwidth}{
+         \hfill\includegraphics[height=3cm]{wm}
+         \hfill\includegraphics[height=3.5cm]{JLab_logo_white1.jpg}
+         \hfill\includegraphics[height=4cm]{LBNL-logo.png}
+         \hfill\includegraphics[height=3cm]{juellich.png}
+         \hfill\hspace*{1cm}\raisebox{1.5cm}{\textbf{\Large{SciDAC PI Meeting 2025}}}
+         \hfill\\
+	\vspace*{1cm}
+      \end{beamercolorbox}
+
+      \begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot}
+      \rule{0pt}{1cm}
+      \end{beamercolorbox}
+   }
+   \def\footer#1{\def\insertfooter{#1}}
+
+   \setbeamercolor{section in head/foot}{use=structure,bg=structure.fg!25!bg}
+   \AtBeginDocument{%
+      { \usebeamercolor{section in head/foot} }%
+      \pgfdeclareverticalshading{beamer@headfade}{\paperwidth}{%
+         color(0cm)=(bg);
+         color(10cm)=(section in head/foot.bg)%
+      }%
+      \setbeamercolor{section in head/foot}{bg=}%
+   }
+   \addtoheadtemplate{\pgfuseshading{beamer@headfade}\vskip-10cm}{}
+}
+\usepackage[orientation=portrait,size=custom,scale=1.5,height=114.3,width=88.9]{beamerposter}
+
+
+\usepackage[english]{babel}
+\usepackage{setspace}
+\usepackage[utf8]{inputenc}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{subfigure}
+%\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes.geometric,fit,decorations,calc,arrows.meta,bending}
+\usepackage[square]{natbib}
+\usepackage{mathtools}
+%\usepackage{kbordermatrix}
+\usepackage[linesnumbered]{algorithm}
+%\usepackage{accents}
+\usepackage{amsmath}
+%\usepackage[absolute,overlay]{textpos}
+%\TPGrid{3}{3}
+\renewcommand{\cite}[2][]{\citep[#1]{#2}}
+%\newtheorem{prop}{Proposition}
+
+\usepackage{pgfplots,pgfplotstable}
+\pgfplotsset{compat=1.16}
+
+\definecolor{jlab_red}{RGB}{192,39,45}
+\definecolor{jlab_orange}{RGB}{249,102,0}
+\definecolor{jlab_blue}{RGB}{47,122,121}
+\definecolor{jlab_green}{RGB}{65,125,10}
+\definecolor{lightgray}{gray}{0.8}
+
+\pgfplotscreateplotcyclelist{jlab}{
+        {jlab_blue,every mark/.append style={fill=jlab_blue!80!black},mark=*},
+        {jlab_orange,every mark/.append style={fill=jlab_orange!80!black},mark=square*},
+        {jlab_green,every mark/.append style={fill=jlab_green!80!black},mark=o*},
+        {black,every mark/.append style={fill=gray},mark=+}
+}
+\pgfplotsset {
+        /pgfplots/bar cycle list/.style={/pgfplots/cycle list={
+                        {red,fill=red!70!white,mark=none},
+                        {jlab_blue,fill=jlab_blue!70!white,mark=none},
+                        {jlab_orange,fill=jlab_orange!70!white,mark=none},
+                        {jlab_green,fill=jlab_green!70!white,mark=none},
+                        {black,fill=black!70!white,mark=none},
+                        {purple,fill=purple!70!white,mark=none},
+                }
+        }
+}
+
+
+%\usepackage{lmodern}
+%\usepackage{fourier}
+%\usepackage{microtype}
+
+
+%\usepackage{times}
+%\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+
+\renewcommand{\newblock}{}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\E}{E}
+
+\title{Improving Preconditioners for LQCD}
+
+\author{Eloy Romero \inst{1}, Travis Whyte \inst{4}, Andreas Stathopoulos \inst{2}, Xiaoye S. Li \inst{3}, Yang Liu \inst{3}, Hanzhao Li \inst{2}}
+% - Give the names in the same order as the appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation.
+
+\institute{\linebreak Jefferson Lab \inst{1}, William \& Mary \inst{2}, Lawrence Livermore National Laboratory \inst{3}, J\"ulich Supercomputing Centre \inst{4}}
+% - Use the \inst command only if there are several affiliations.
+% - Keep it simple, no one is interested in your street address.
+
+\date{SciDAC PI Meeting 25}
+% - Either use conference name or its abbreviation.
+% - Not really informative to the audience, more for people (including
+%   yourself) who are reading the slides online
+
+
+\newcommand{\includefigure}[1]{\footnotesize\centering\input{#1}}
+\newcommand{\bu}{\ensuremath{\mathbf u}}
+\newcommand{\bv}{\ensuremath{\mathbf v}}
+\newcommand{\bx}{\ensuremath{\mathbf x}}
+%\newcommand{\bD}{\ensuremath{\mathbf D}}
+\newcommand{\bD}{\ensuremath{D}}
+
+\pgfplotstableread{
+ rhs timef timed
+ 1 0.004 0.005
+ 2 0.001 0.002
+ 4 0.002 0.002
+ 8 0.0005 0.0008
+ 16 0.0004 0.0008
+ 32 0.0004 0.0008
+}\tensorcores
+
+\pgfplotstableread{
+ rhs timef timed
+ 1 0.005 0.004
+ 2 0.004 0.003
+ 4 0.003 0.002
+ 8 0.003 0.002
+ 16 0.003 0.003
+ 32 0.003 0.007
+}\hipsparse
+
+\pgfplotstableread{
+x
+1
+0.384613
+0.24822
+0.202445
+0.166577
+0.14936
+0.126417
+0.150385
+0.122906
+0.177029
+0.139754
+0.114638
+0.0911985
+0.0964264
+0.0766346
+0.0913218
+0.0715814
+0.0636038
+0.0499902
+0.0478825
+0.0391798
+0.0410919
+0.0328292
+0.0342235
+0.0271951
+0.0269359
+0.0220767
+0.0234426
+0.0189804
+0.0186571
+0.0152677
+0.0161933
+0.0131597
+0.0131409
+0.0106894
+0.0105898
+0.00869513
+0.00926764
+0.00736598
+0.0072172
+0.00567928
+0.00556268
+0.00440009
+0.00478003
+0.00381176
+0.00359671
+0.00295347
+}\resIluATwoColors
+
+\pgfplotstableread{
+x
+1
+0.508138
+0.306669
+0.256028
+0.207408
+0.183697
+0.15553
+0.198981
+0.161115
+0.20621
+0.162219
+0.14465
+0.112451
+0.131198
+0.103054
+0.104153
+0.0831863
+0.0882767
+0.0678852
+0.0682043
+0.0543006
+0.0529761
+0.0437956
+0.0438036
+0.0352009
+0.0347068
+0.0285025
+0.027026
+0.0219999
+0.0227218
+0.0187936
+0.0176464
+0.0148055
+0.0150369
+0.0123466
+0.012235
+0.0101614
+0.0108713
+0.00872431
+0.0086515
+0.00705182
+0.00743156
+0.00585263
+0.00565689
+0.00456469
+0.00405367
+0.00332121
+0.00335981
+}\resEoBj
+\pgfplotstableread{
+x
+1
+0.318357
+0.215286
+0.174127
+0.13827
+0.19156
+0.14027
+0.130215
+0.0905366
+0.100774
+0.0695512
+0.0694315
+0.050417
+0.0480724
+0.0345148
+0.0333722
+0.0243739
+0.0220437
+0.0169667
+0.0173485
+0.0132618
+0.0117824
+0.00890948
+0.00925576
+0.0070195
+0.00639732
+0.00481508
+0.00495382
+0.00367884
+0.00311148
+0.00236313
+}\resEoIluATwoColors
+\pgfplotstableread{
+x
+1
+0.550776
+0.319731
+0.244407
+0.1858
+0.183236
+0.137666
+0.182356
+0.128179
+0.115828
+0.0784772
+0.0686607
+0.0491044
+0.0484203
+0.0352676
+0.0343748
+0.0242708
+0.0236755
+0.0167448
+0.0159509
+0.0115729
+0.0106808
+0.00770229
+0.00666408
+0.00480498
+0.00456152
+0.0032247
+0.00294174
+0.00214419
+}\resEoeoBj
+\pgfplotstableread{
+x
+1
+0.412826
+0.262377
+0.200501
+0.150582
+0.18872
+0.124461
+0.100119
+0.0673365
+0.0728174
+0.048827
+0.0419028
+0.0278427
+0.0273554
+0.0181937
+0.0155107
+0.0106797
+0.010322
+0.00709384
+0.00603787
+0.00408634
+0.00370554
+0.00251223
+}\resEoeoIluATwoColors
+\pgfplotstableread{
+x
+1
+0.237009
+0.109035
+0.0972097
+0.0463599
+0.0319361
+0.0150787
+0.0114673
+0.00543799
+0.00330537
+0.00156166
+}\resEoIlu
+
+\pgfplotstableread{
+its  timereg               timesvd
+100  16.136489099999998587 10.427532600000001040
+200  12.005449399999998050 10.143307899999999933 
+300  12.429576000000000846 10.956367799999998880 
+400  11.783274799999997384 11.044544300000001869 
+500  12.607772300000000598 10.976993499999995407 
+}\timeMGConfA
+
+\pgfplotstableread{
+its  timereg               timesvd
+100  2.516055099999999989  2.196156999999999915
+200  2.716987399999999830  1.902967700000000262
+300  3.042446199999999656  1.915818799999999822
+400  3.250529800000000247  1.810221500000000150
+500  3.148305200000000248  1.849004899999999951
+}\timeMGConfB
+
+\begin{document}
+
+\begin{frame}[t,fragile] % The whole poster
+
+% Poster organized in 3 columns of size .33. The rest
+% of space is left as margin.
+\begin{columns}[T]
+
+    \begin{column}{.37\textwidth} % First column
+    \begin{exampleblock}{Preconditioners for Wilson Fermions}
+        \begin{itemize}
+            \setlength{\itemsep}{1cm}
+            \item One of the most computationally expensive parts of a lattice QCD calculation is generating \emph{propagators}, created by solving a linear system with the lattice Dirac operator $\bD$, from the discretization of the quark and gluon fields
+    
+            \item As the mass of the light quarks approaches their physical value, the spectrum of the Dirac operator gets closer to the origin, drastically slowing down the converge of iterative solvers
+    
+            \item Different preconditioning techniques are used to accelerate the iterative solution with the Dirac operator:
+            \begin{itemize}
+            \item Deflation methods: exact deflation, approximate deflation (multigrid)
+            \item Even-odd preconditioning
+            \item Approximate inverses: block Jacobi, domain decomposition, Incomplete LU factorization
+            \end{itemize}
+        \end{itemize}
+    
+    \end{exampleblock}
+    \end{column}
+    
+    \begin{column}{.6\textwidth} % Second column
+    \begin{block}{New Multigrid upgrade: Chiral SVD extension for prolongators}
+        \begin{columns}[t]
+        %\begin{column}{.48\textwidth}
+        %    Multigrid prolongator construction:
+        %    \begin{enumerate}
+        %        \item Get a rough rank $k$ approximation, $\Psi$, of left singular vectors of $D$ with the smallest singular values (e.g., solving $D\phi = 0$ with $k$ random initial guesses)
+        %        \item Expand $\Psi$ with the corresponding right singular vectors (e.g., $\Phi=[\phi\ \gamma_5\phi]$ if $D$ is $\gamma_5$-Hermitian)
+        %        \item Expand the basis with linear combinations of $\Psi$ restricted to small domains (blocking)
+        %        \item The resulting prolongator has rank $2kd$ when restricted to $d$ domains, but admits a sparse representation with only $kd$ dense vectors
+        %    \end{enumerate}
+        %\end{column}
+    
+        \begin{column}{.5\textwidth}
+            {\large New \emph{Chiral SVD} prolongators [1]:}
+            \begin{enumerate}
+                \setlength{\itemsep}{8mm}
+                \item Get a rough rank $K$ approximation, $\Psi$, of left singular vectors of $D$ with the smallest singular values, e.g., solving $D\phi = 0$ with $K$ random initial guesses, aka null vectors
+                %\item Expand $\Psi$ with the corresponding right singular vectors (e.g., $\Phi=[\phi\ \gamma_5\phi]$ if $D$ is $\gamma_5$-Hermitian)
+                \item Take each chiral component, $\Psi_0 = (1+\gamma_5)\Psi$ and $\Psi_1 = (1-\gamma_5)\Psi$
+                %\item Expand  with linear combinations of $\Psi$ restricted to small domains (blocking)
+                \item Divide the lattice in $d$ small domains, $\Lambda_j$, and restrict $\Psi_i$ to each one and select the $k\leq K$ most frequent directions, $\text{SVD}_k(\Psi_i(\Lambda_j))$, e.g., selecting the $k$ left singular vectors with the largest singular values
+                %\item The resulting prolongator has rank $2kd$, but admits a sparse representation with only $kd$ dense vectors
+                \item Construct the prolongator as% $[\text{SVD}_k(\Psi_i(\Lambda_j)) \text{\ for\ } i\in \{0,1\}, j\in \{1,\dots,d\}]$
+            \end{enumerate}
+            \noindent
+            {\large \ $\left[\ \text{SVD}_k(\Psi_i(\Lambda_j)) \text{\ for\ } i\!\in\! \{0,\!1\}, 1\!\leq\! j\! \leq\! d\ \right]$}
+        \end{column}
+        \begin{column}{.4\textwidth}
+        \begin{itemize}
+            \setlength{\itemsep}{1cm}
+            \item The Chiral SVD prolongators are equivalent to the regular prolongators when $k=K$
+            \item For $k<K$, the resulting multigrid preconditioner is better than with the regular prolongators generated with $k$ null vectors
+        \end{itemize}
+
+        \vspace*{2cm}
+        Average number of iterations for each multigrid level on a $32^3\times 64$ lattice with $K=2k$ for all levels:
+
+        \vspace*{1cm}
+\begin{center}
+\begin{tabular}{c@{\ \ \ \ }c@{\ \ \ \ }c}
+         & Regular        . & CSVD          \\
+MG Level &         Prolong. &      Prolong. \\\hline
+0 & 12.0 & 8.0 \\
+1 & 34.0 & 16.0 \\
+2 & 115.2 & 58.1
+\end{tabular}
+\end{center}
+%        %    Multigrid prolongator construction:
+        %    \begin{enumerate}
+        %        \item Get a rough rank $k$ approximation, $\Psi$, of left singular vectors of $D$ with the smallest singular values (e.g., solving $D\phi = 0$ with $k$ random initial guesses)
+        %        \item Expand $\Psi$ with the corresponding right singular vectors (e.g., $\Phi=[\phi\ \gamma_5\phi]$ if $D$ is $\gamma_5$-Hermitian)
+        %        \item Expand the basis with linear combinations of $\Psi$ restricted to small domains (blocking)
+        %        \item The resulting prolongator has rank $2kd$ when restricted to $d$ domains, but admits a sparse representation with only $kd$ dense vectors
+        %    \end{enumerate}
+        \end{column}
+        \end{columns}
+    \end{block}
+    \end{column}
+\end{columns}
+
+%\begin{table}
+%\begin{tabular}{c@{\ \ \ \ \ }r@{\ \ \ \ \ }r@{\ \ \ \ \ }rrrr}
+%      &         &      & \multicolumn{4}{c}{iCSVD}\\ \cline{4-7}
+%Level & Regular & CSVD & $N_s = 4$ & $N_s = 8$ & $N_s = 12$ & $N_s = 16$ \\\hline
+%
+%$\ell = 0$ & 12.0 & 8.0 & 8.0 & 7.5 & 7.3 & 7.0\\
+%
+%$\ell = 1$ & 34.0 & 16.0 & 16.0 & 15.0 & 14.6 & 14.0\\
+%
+%$\ell = 2$ & 115.2 & 58.1 & 58.0 & 53.6 & 50.8 & 48.7\\
+%
+%$\ell = 3$ & 635.5 & 533.1 & 525.1 & 515.8 & 458.1& 458.0
+%
+%\end{tabular}
+%\caption{\label{tab::mcrit}The mean number of iterations spent on each multigrid level during a linear solve for the Regular, CSVD and iCSVD setup methods for Configuration B at $m_q \approx m_{crit}$.}
+%\end{table}
+
+
+\begin{columns}[c]
+    \begin{column}{.01\textwidth}
+    \end{column}
+    \begin{column}{.25\textwidth}
+
+    \begin{flushright}
+    Mean solve time comparing the regular multigrid setup and the Chiral SVD setup, starting by solving $\bD\phi=0$ iteratively with different maximum number of iterations at all levels. Tested on an anisotropic $32^3\times 256$ latices with $m_\pi \approx 239$ MeV (left) and an isotropic $32^3\times 64$ lattices with $m_\pi\approx 220$ MeV (right).
+    \end{flushright}
+    \end{column}
+    \begin{column}{.42\textwidth}
+    \begin{tikzpicture}
+    \begin{axis}[
+            width=.4\textwidth, tick label style={/pgf/number format/fixed},
+            height=.3\textwidth,
+            title style={align=center},
+            %title={},
+            xlabel = {setup iterations},
+            ylabel = {mean solve time (s)},
+            ymin = 0,
+            %ymax = 600,
+            xtick={100,200,300,400,500},
+            ytick={0,5,...,20},
+            %extra x tick style={tick label style={rotate=-25, anchor=west}},
+            legend pos=south east,
+            every axis plot/.append style={very thick},
+            legend style={ draw=none, cells={anchor=west}},
+      ]
+      \addplot+[color=jlab_blue,mark=*,line width=3mm] table[x=its, y=timereg] {\timeMGConfA};
+      \addplot+[color=jlab_red,mark=*,line width=3mm] table[x=its, y=timesvd] {\timeMGConfA};
+      \legend{regular,chiral SVD}
+    \end{axis}
+    \end{tikzpicture}
+    \hfill
+    \begin{tikzpicture}
+    \begin{axis}[
+            width=.42\textwidth, tick label style={/pgf/number format/fixed},
+            height=.3\textwidth,
+            title style={align=center},
+            %title={},
+            xlabel = {setup iterations},
+            ylabel = {mean solve time (s)},
+            ymin = 0,
+            %ymax = 600,
+            xtick={100,200,300,400,500},
+            ytick={0,1,...,4},
+            legend pos=south east,
+            every axis plot/.append style={very thick},
+            legend style={ draw=none, cells={anchor=west}},
+      ]
+      \addplot+[color=jlab_blue,mark=*,line width=3mm] table[x=its, y=timereg] {\timeMGConfB};
+      \addplot+[color=jlab_red,mark=*,line width=3mm] table[x=its, y=timesvd] {\timeMGConfB};
+      \legend{regular,chiral SVD}
+    \end{axis}
+    \end{tikzpicture}
+    \end{column}
+    \begin{column}{.27\textwidth}
+        \begin{itemize}
+            \item[{[1]}] T. Whyte et al., \emph{Accelerating multigrid with streaming chiral SVD for Wilson Fermions in lattice QCD}. arXiv {\small \url{https://arxiv.org/abs/2505.14399}}
+        \end{itemize}
+    \end{column}
+\end{columns}
+
+\vspace*{3cm}
+
+\begin{block}{Accelerating Multigrid with Approximate Inverse Preconditioners}
+\vspace*{1cm}
+\begin{columns}[T]
+\begin{column}{.5\textwidth} % First column
+    \begin{itemize}
+        \setlength{\itemsep}{1cm}
+        \item Multigrid is usually combined with another preconditioner, especially to accelerate the smoothing and the solution of the coarsest operator
+\[ K_\text{MG}[A]x = Vy + \underbrace{\text{solve}(A,x-AVy)}_\text{smoothing},\quad\text{where\ } y=\text{solve}(\underbrace{V^\dagger AV}_\text{coarse op.}, V^\dagger x)\]
+
+        %\item In typical multigrid setups for Wilson Fermion, the prolongators are represented such that the coarse operators are lattice operators like $\bD$ with the links being larger and larger $k\times k$ dense nonzero blocks for deeper levels
+
+        \item We are exploring the potential of using Incomplete LU (ILU) factorizations as preconditioners as complement for multigrid
+
+        \item Despite the fact that solving the triangular factors is difficult to parallelize, ILU may be useful:
+	\begin{itemize}
+                \setlength{\itemsep}{1cm}
+		\item as part of the domain decomposition based preconditioners
+		\item for solving the coarse operator with a small number of processes
+	\end{itemize}
+
+	\item We are planning on taking advantage of SuperLU optimized sparse triangular solver kernels
+    \end{itemize}
+
+    \vspace*{2cm}
+    \begin{flushright}	
+    Preliminary study of several preconditioners for accelerating the solution of the coarsest operator on a typical 2-level mutltigrid for a lattice of $32^4\times 64$.
+    \end{flushright}
+\end{column}
+
+\begin{column}{.4\textwidth} % First column
+
+    \vspace*{4cm}
+    \begin{tikzpicture}
+    \begin{semilogyaxis}[
+            width=0.8\textwidth, tick label style={/pgf/number format/fixed},
+            height=.4\textwidth,
+            title style={align=center},
+            %title={Ex. of Dslash timings on a Frontier\\ node for a $32^3\times 64$ lattice},
+            xlabel = {iterations},
+            ylabel = relative residual norm,
+            ymin = 3e-3,
+            %ymax = 600,
+            xtick={10,20,...,50},
+            extra x ticks={1},
+            %xticklabels={1,2,4,8,16,32},
+            %ytick={1,2,3,4},
+            %yticklabels={1,2,3,4},
+            %extra x tick style={tick label style={rotate=-25, anchor=west}},
+            every axis plot/.append style={very thick},
+            legend style={ draw=none, cells={anchor=west}},
+      ]
+      %\addplot+[color=lightgray,no marks,line width=3mm] table[x expr=\coordindex+1, y=x] {\resIluATwoColors};
+      \addplot+[color=jlab_red,no marks,line width=3mm] table[x expr=\coordindex+1, y=x] {\resEoBj};
+      \addplot+[color=jlab_orange,no marks,line width=3mm] table[x expr=\coordindex+1, y=x] {\resEoIluATwoColors};
+      \addplot+[color=jlab_blue,no marks,line width=3mm] table[x expr=\coordindex+1, y=x] {\resEoIlu};
+      \legend{EO Block-Jacobi, EO ILU(0)/$A$ 2 colors, EO ILU(0)/$A$ natural}
+    \end{semilogyaxis}
+    \end{tikzpicture}
+
+    \bigskip
+    \begin{tikzpicture}
+    \begin{semilogyaxis}[
+            width=0.8\textwidth, tick label style={/pgf/number format/fixed},
+            height=.4\textwidth,
+            title style={align=center},
+            %title={Ex. of Dslash timings on a Frontier\\ node for a $32^3\times 64$ lattice},
+            xlabel = {halo exchanges},
+            ylabel = relative residual norm,
+            ymin = 3e-3,
+            xtick={20,40,...,200},
+            extra x ticks={1},
+            %ymax = 600,
+            %xtick={1,2,4,8,16,32},
+            %xticklabels={1,2,4,8,16,32},
+            %ytick={1,2,3,4},
+            %yticklabels={1,2,3,4},
+            %extra x tick style={tick label style={rotate=-25, anchor=west}},
+            every axis plot/.append style={very thick},
+            legend style={ draw=none, cells={anchor=west}},
+      ]
+      %\addplot+[color=lightgray,no marks,line width=3mm] table[x expr=\coordindex*3+3, y=x] {\resIluATwoColors};
+      \addplot+[color=jlab_red,no marks,line width=3mm] table[x expr=\coordindex*2+2, y=x] {\resEoBj};
+      \addplot+[color=jlab_orange,no marks,line width=3mm] table[x expr=\coordindex*4+4, y=x] {\resEoIluATwoColors};
+      \addplot+[color=jlab_blue,no marks,line width=3mm] table[x expr=\coordindex*4+4, y=x] {\resEoIlu};
+      \addplot+[color=jlab_blue,no marks,dashed,line width=3mm] table[x expr=\coordindex*8+8, y=x] {\resEoIlu};
+      \legend{EO Block-Jacobi, EO ILU(0)/$A$ 2 colors, EO ILU(0)/$A$ natural 2 procs,EO ILU(0)/$A$ natural 4 procs}
+    \end{semilogyaxis}
+    \end{tikzpicture}
+\end{column}
+
+%\begin{column}{.3\textwidth} % First column
+%    \begin{itemize}
+%        \setlength{\itemsep}{1cm}
+%        \item \texttt{mgproton} is a solver collection within Chroma, which includes:
+%        \begin{itemize}
+%            \setlength{\itemsep}{.8cm}
+%            \item slicing, coloring, and cloning of sparse operators
+%            \item linear solvers: FGMRES, GCR...
+%            \item preconditioners: Multigrid, Even-odd Schur complement, block Jacobi, SVD deflation
+%            \item based on \texttt{superbblas}
+%        \end{itemize}
+%    \end{itemize}
+%
+%\end{column}
+
+\end{columns}
+\end{block}
+
+%\begin{column}{.49\textwidth}
+%\begin{block}{References}
+%
+%    \begin{itemize}
+%        \setlength{\itemsep}{1cm}
+%        \item L. Giusti, M. Saccardi, \emph{Four-dimensional factorization of the fermion determinant in lattice QCD}, Physics Letters B, Vol. 829 (2022)
+%    \end{itemize}
+%
+%\end{block}
+%\end{column}
+
+\end{frame}
+
+\end{document}
