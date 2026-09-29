@@ -1,5 +1,18 @@
 # Maintenance record
 
+## Near-threshold charm-meson highlight
+
+- Added a three-sentence research highlight for `highlights/ddbar_26.pdf` before
+  the 2026 SciDAC PI meeting entry, with a cropped top-left graphic in
+  `img/ddbar_26.png`. Subsequently updated both title and image links to
+  `highlights/ASCR_Highlight_DDbar_2026.pdf` at the user's request.
+- The supplied slide mixes a 2024 PRL citation with arXiv:2602.09862. The user
+  chose the matching publication, Phys. Rev. D 114, 054028 (2026), for the byline;
+  verified DOI `10.1103/s3p2-552r` against INSPIRE and arXiv metadata.
+- Used the paper's D–anti-D channel notation and qualified the summary to the
+  energy region studied. Visually checked the crop and verified local assets,
+  entry ordering, and whitespace; full Jekyll rendering was not checked locally.
+
 ## 2025 meeting archive
 
 - Follow-up: the Romero preconditioner poster was replaced with a valid one-page

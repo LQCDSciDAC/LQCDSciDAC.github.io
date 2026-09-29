@@ -13,7 +13,8 @@ at the repository root; do not edit generated `_site/` output.
   or stylesheet. Use a Jekyll-rendered preview or the deployed site for visual QA.
 - Add new highlights in the requested order and match the surrounding markup.
   Prefer a faithful crop of a supplied talk or highlight PDF for the thumbnail.
-- The 2026 meeting entry follows the Isotensor entry and links to
+- The 2026 meeting entry follows the Isotensor and near-threshold charm-meson
+  highlights and links to
   `scidac_pi_2026.html`. Meeting assets live in `highlights/2026_SciDAC_PI/`.
   The meeting page has two-sentence descriptions for each talk and poster.
 - Keep navigation pages at the repository root: shared layout links are relative.
