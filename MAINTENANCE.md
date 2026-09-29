@@ -1,5 +1,17 @@
 # Maintenance record
 
+## Citation byline links
+
+- Linked journal bylines on Highlights and SciDAC to publisher DOIs verified
+  against INSPIRE metadata and Crossref. Kept all highlight-title links intact,
+  including the hybrid-meson PDF link.
+- Split the two baryon-spectrum citations into individual DOI links and corrected
+  the volume 84 paper's year from 2012 to 2011 using its publication metadata.
+- Linked news-source bylines to the published story URLs already used by their
+  titles. Those existing news destinations were reused, not revalidated.
+- Verified journal byline coverage, unchanged title destinations, absence of
+  nested anchors, and `git diff --check`.
+
 ## 2026-09-29
 
 - Added the Isotensor three-pion scattering highlight, linked PDF, and a crop of

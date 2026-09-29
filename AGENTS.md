@@ -17,6 +17,9 @@ at the repository root; do not edit generated `_site/` output.
   `scidac_pi_2026.html`. Meeting assets live in `highlights/2026_SciDAC_PI/`.
   The meeting page has two-sentence descriptions for each talk and poster.
 - Keep navigation pages at the repository root: shared layout links are relative.
+- Link journal citation bylines to verified `https://doi.org/` URLs, separately
+  from highlight-title links. Give each cited paper its own link. Link news-source
+  bylines to their published stories.
 
 ## Publications
 
