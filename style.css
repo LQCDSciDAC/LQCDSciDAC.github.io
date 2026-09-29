@@ -459,6 +459,23 @@ tr.highlights:nth-child(odd) {
   background-color: rgba(216, 235, 232, 0.35);
 }
 
+table.highlights {
+  table-layout: fixed;
+}
+
+table.highlights td:first-child {
+  width: 36%;
+}
+
+table.highlights img.results {
+  width: 100%;
+  height: auto;
+}
+
+table.highlights td {
+  overflow-wrap: anywhere;
+}
+
 td.publications {
   vertical-align: bottom;
 }
@@ -512,6 +529,23 @@ ul.publications li {
 }
 
 @media (max-width: 640px) {
+  table.highlights,
+  table.highlights tbody,
+  table.highlights tr,
+  table.highlights td {
+    display: block;
+    width: 100%;
+  }
+
+  table.highlights td:first-child {
+    width: 100%;
+  }
+
+  table.highlights img.results {
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
   .site-shell {
     width: min(100vw - 12px, 100%);
     margin: 6px auto;
